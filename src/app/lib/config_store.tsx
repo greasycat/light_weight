@@ -16,12 +16,14 @@ export enum Theme {
 interface AppConfig {
   storageType: StorageType
   theme: Theme
+  postgresUrl?: string
   // Add more config options here as needed
 }
 
 const DEFAULT_CONFIG: AppConfig = {
   storageType: StorageType.LOCAL_STORAGE,
-  theme: Theme.LIGHT
+  theme: Theme.LIGHT,
+  postgresUrl: '',
 }
 
 // Cookie name
@@ -71,11 +73,12 @@ export function useAppConfig() {
     return updateConfig({ theme: newTheme })
   }
 
+
   return {
     config,
     loaded,
     updateConfig,
     toggleStorageType,
-    toggleTheme
+    toggleTheme,
   }
 }

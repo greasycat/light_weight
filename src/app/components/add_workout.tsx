@@ -40,7 +40,7 @@ export default function AddWorkout() {
   }
   
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+    <div className="bg-white rounded-lg shadow-lg p-6 h-screen w-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Add Workout</h2>
         <div className="flex space-x-2">
@@ -60,8 +60,8 @@ export default function AddWorkout() {
       </div>
       
       {mode === 'quick' ? (
-        <div className="bg-gray-50 p-5 rounded-lg">
-          <form onSubmit={handleQuickSubmit}>
+        <div className="bg-gray-50 p-5 rounded-lg flex-grow flex flex-col">
+          <form onSubmit={handleQuickSubmit} className="flex-grow flex flex-col">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -118,17 +118,19 @@ export default function AddWorkout() {
                 ></textarea>
               </div>
             </div>
+            
+            <div className="mt-auto">
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4">
+                <p className="text-sm text-blue-700">
+                  <strong>Quick Add</strong> logs a workout with just the essentials. 
+                  For detailed tracking, use <strong>Add Day</strong> to log individual exercises.
+                </p>
+              </div>
+            </div>
           </form>
-          
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4">
-            <p className="text-sm text-blue-700">
-              <strong>Quick Add</strong> logs a workout with just the essentials. 
-              For detailed tracking, use <strong>Add Day</strong> to log individual exercises.
-            </p>
-          </div>
         </div>
       ) : (
-        <div className="bg-gray-100 p-8 rounded-lg text-center">
+        <div className="bg-gray-100 p-8 rounded-lg text-center flex-grow flex items-center justify-center">
           <p className="text-gray-500">Detailed workout tracking will be implemented soon!</p>
         </div>
       )}
