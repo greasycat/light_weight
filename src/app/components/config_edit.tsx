@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useAppConfig, StorageType, Theme } from '@/app/lib/config_store'
+import { ExerciseDB } from '../lib/indexdb_handler'
 
 export default function ConfigEdit() {
   const { config, loaded, toggleStorageType, toggleTheme, updateConfig} = useAppConfig()
   const [showPanel, setShowPanel] = useState(false)
   const [dbUrl, setDbUrl] = useState(config.postgresUrl || '')
+  const [loading, setLoading] = useState(false)
 
   const handleDbUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDbUrl(e.target.value)
@@ -14,6 +16,50 @@ export default function ConfigEdit() {
 
   const saveDbUrl = () => {
     updateConfig({ postgresUrl: dbUrl })
+  }
+
+  const handlePopulateRecords = async () => {
+    try {
+      setLoading(true)
+      await ExerciseDB.populateSampleRecords()
+      setLoading(false)
+    } catch (error) {
+      console.error('Error populating records:', error)
+      setLoading(false)
+    }
+  }
+
+  const handleClearRecords = async () => {
+    try {
+      setLoading(true)
+      await ExerciseDB.clearAllRecords()
+      setLoading(false)
+    } catch (error) {
+      console.error('Error clearing records:', error)
+      setLoading(false)
+    }
+  }
+
+  const handlePopulateExercises = async () => {
+    try {
+      setLoading(true)
+      await ExerciseDB.populateSampleData()
+      setLoading(false)
+    } catch (error) {
+      console.error('Error populating exercises:', error)
+      setLoading(false)
+    }
+  }
+
+  const handleClearExercises = async () => {
+    try {
+      setLoading(true)
+      await ExerciseDB.clearAllExercises()
+      setLoading(false)
+    } catch (error) {
+      console.error('Error clearing exercises:', error)
+      setLoading(false)
+    }
   }
 
   if (!loaded) return null
@@ -102,6 +148,47 @@ export default function ConfigEdit() {
             </button>
           </div>
 
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Record Management</h2>
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleClearRecords}
+                  disabled={loading}
+                  className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                >
+                  Clear All Records
+                </button>
+                <button
+                  onClick={handlePopulateRecords}
+                  disabled={loading}
+                  className="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                >
+                  Add Sample Records
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Exercise Management</h2>
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleClearExercises}
+                  disabled={loading}
+                  className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                >
+                  Clear All Exercises
+                </button>
+                <button
+                  onClick={handlePopulateExercises}
+                  disabled={loading}
+                  className="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                >
+                  Add Sample Exercises
+                </button>
+              </div>
+            </div>
+          </div>
 
           {showPanel && (
             <div className="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-200">

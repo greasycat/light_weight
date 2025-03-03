@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Exercise, ExerciseDB } from '../lib/indexdb_handler';
 import { filterExercises, SearchInput } from '../lib/search_utils';
-import AddExercise from './exercise_add';
-import EditExercise from './exercise_edit';
+import { renderTypeBadge } from '../lib/exercise_utils';
+import ExerciseForm from './exercise_form'
 
 interface ExerciseListProps {
   onSelectExercise?: (exercise: Exercise) => void;
@@ -19,6 +19,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   const [pressedExercise, setPressedExercise] = useState<Exercise | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [_, setIsLongPressing] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const loadExercises = async () => {
     try {
@@ -39,16 +40,6 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
     loadExercises();
   }, []);
 
-  // Handle when a new exercise is added
-  const handleExerciseAdded = async (exercise: Exercise) => {
-    await loadExercises(); // Refresh the exercise list
-  };
-
-  // Handle when an exercise is updated
-  const handleExerciseUpdated = async (exercise: Exercise) => {
-    await loadExercises(); // Refresh the exercise list
-  };
-
 
   // Filter exercises when search term changes
   useEffect(() => {
@@ -58,30 +49,6 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
-
-  // Handle clear all exercises
-  const handleClearAll = async () => {
-    if (window.confirm('Are you sure you want to delete all exercises? This cannot be undone.')) {
-      try {
-        await ExerciseDB.clearAllExercises();
-        await loadExercises();
-      } catch (err) {
-        setError('Failed to clear exercises');
-        console.error('Error clearing exercises:', err);
-      }
-    }
-  };
-
-  // Handle populate with sample exercises
-  const handlePopulate = async () => {
-    try {
-      await ExerciseDB.populateSampleExercises();
-      await loadExercises();
-    } catch (err) {
-      setError('Failed to populate exercises');
-      console.error('Error populating exercises:', err);
-    }
   };
 
   // Clean up long press timer
@@ -94,6 +61,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
         setLoadingProgress(prev => {
           if (prev >= 100) {
             setEditingExercise(pressedExercise);
+            setShowForm(true);
             clearInterval(interval);
             return 100;
           }
@@ -126,31 +94,6 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   
   const handleMouseUp = () => {
     setPressedExercise(null);
-  };
-
-  // Render badge for exercise type
-  const renderTypeBadge = (type: string) => {
-    let badgeClass = '';
-    
-    switch (type) {
-      case 'strength':
-        badgeClass = 'bg-blue-100 text-blue-800';
-        break;
-      case 'cardio':
-        badgeClass = 'bg-red-100 text-red-800';
-        break;
-      case 'core':
-        badgeClass = 'bg-green-100 text-green-800';
-        break;
-      default:
-        badgeClass = 'bg-gray-100 text-gray-800';
-    }
-    
-    return (
-      <span className={`text-xs px-2 py-1 rounded-full ${badgeClass} select-none`}>
-        {type}
-      </span>
-    );
   };
 
   // Render count based on exercise type
@@ -203,25 +146,34 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
     }
   };
 
+  const handleExerciseComplete = async () => {
+    await loadExercises() // Refresh the list
+    setShowForm(false)
+    setEditingExercise(null)
+  }
+
+  const handleExerciseDelete = async () => {
+    await loadExercises() // Refresh the list
+    setShowForm(false)
+    setEditingExercise(null)
+  }
+
+  const handleAddClick = () => {
+    setEditingExercise(null)
+    setShowForm(true)
+  }
+
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Exercises</h2>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handleClearAll}
-            className="px-3 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-          >
-            Clear All
-          </button>
-          <button
-            onClick={handlePopulate}
-            className="px-3 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            Populate
-          </button>
-          <AddExercise onExerciseAdded={handleExerciseAdded} />
-        </div>
+        <button
+          onClick={handleAddClick}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Add Exercise
+        </button>
       </div>
       
       {/* Search Bar */}
@@ -277,13 +229,12 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
         </div>
       )}
 
-      {/* Edit Exercise Modal */}
-      {editingExercise && (
-        <EditExercise
-          exercise={editingExercise}
-          isOpen={true}
-          onClose={() => setEditingExercise(null)}
-          onExerciseUpdated={handleExerciseUpdated}
+      {showForm && (
+        <ExerciseForm
+          exercise={editingExercise || undefined}
+          onComplete={handleExerciseComplete}
+          onCancel={() => setShowForm(false)}
+          onDelete={handleExerciseDelete}
         />
       )}
     </div>

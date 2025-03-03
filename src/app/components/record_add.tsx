@@ -1,6 +1,7 @@
 import React, { useState, useEffect, CSSProperties } from 'react';
 import { Exercise, ExerciseRecord, ExerciseDB } from '../lib/indexdb_handler';
 import { filterExercises, SearchInput } from '../lib/search_utils';
+import { renderTypeBadge, formatDefaultCount } from '../lib/exercise_utils';
 
 interface AddRecordProps {
   onRecordAdded?: (record: ExerciseRecord) => void;
@@ -24,6 +25,8 @@ const RecordAdd: React.FC<AddRecordProps> = ({
   const [note, setNote] = useState<string>('');
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [weight, setWeight] = useState<string>('');
+  const [unit, setUnit] = useState<'kg' | 'lbs'>('lbs');
 
   useEffect(() => {
     if (isOpen) {
@@ -49,6 +52,11 @@ const RecordAdd: React.FC<AddRecordProps> = ({
 
   const handleExerciseSelect = (exercise: Exercise) => {
     setSelectedExercise(exercise);
+    
+    // Reset weight if not a strength exercise
+    if (exercise.type !== 'strength') {
+      setWeight('');
+    }
     
     // Set default count based on exercise type
     if (exercise.type === 'strength') {
@@ -78,6 +86,7 @@ const RecordAdd: React.FC<AddRecordProps> = ({
     try {
       const countValue = parseInt(count);
       const rpeValue = rpe ? parseFloat(rpe) : null;
+      const weightValue = weight ? parseFloat(weight) : undefined;
       
       const recordId = await ExerciseDB.addRecord({
         exerciseName: selectedExercise.name,
@@ -85,7 +94,9 @@ const RecordAdd: React.FC<AddRecordProps> = ({
         rpe: rpeValue,
         note,
         date: new Date().toISOString().split('T')[0],
-        time: new Date().toTimeString().split(' ')[0]
+        time: new Date().toTimeString().split(' ')[0],
+        weight: weightValue,
+        unit
       });
       
       const newRecord = {
@@ -95,7 +106,9 @@ const RecordAdd: React.FC<AddRecordProps> = ({
         rpe: rpeValue,
         note,
         date: new Date().toISOString().split('T')[0],
-        time: new Date().toTimeString().split(' ')[0]
+        time: new Date().toTimeString().split(' ')[0],
+        weight: weightValue,
+        unit
       };
       
       if (onRecordAdded) {
@@ -107,6 +120,8 @@ const RecordAdd: React.FC<AddRecordProps> = ({
       setCount('');
       setRpe('');
       setNote('');
+      setWeight('');
+      setUnit('lbs');
       setIsOpen(false);
       
     } catch (err) {
@@ -152,25 +167,19 @@ const RecordAdd: React.FC<AddRecordProps> = ({
                     </div>
                   ) : (
                     <>
-                      <div className="mb-2">
-                        <SearchInput
-                          value={searchTerm}
-                          onChange={handleSearchChange}
-                          placeholder="Search exercises..."
+                      {!selectedExercise && (
+                        <div className="mb-2">
+                          <SearchInput
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            placeholder="Search exercises..."
                         />
                       </div>
+                      )}
                       {selectedExercise ? (
                         <div className="flex justify-between items-center p-3 border rounded-md">
-                          <div>
                             <p className="font-medium">{selectedExercise.name}</p>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              selectedExercise.type === 'strength' ? 'bg-blue-100 text-blue-800' :
-                              selectedExercise.type === 'cardio' ? 'bg-red-100 text-red-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {selectedExercise.type}
-                            </span>
-                          </div>
+                            {renderTypeBadge(selectedExercise.type)}
                           <button
                             type="button"
                             onClick={() => setSelectedExercise(null)}
@@ -187,14 +196,10 @@ const RecordAdd: React.FC<AddRecordProps> = ({
                               onClick={() => handleExerciseSelect(exercise)}
                               className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100"
                             >
-                              <p className="font-medium">{exercise.name}</p>
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                exercise.type === 'strength' ? 'bg-blue-100 text-blue-800' :
-                                exercise.type === 'cardio' ? 'bg-red-100 text-red-800' :
-                                'bg-green-100 text-green-800'
-                              }`}>
-                                {exercise.type}
-                              </span>
+                              <div className="flex items-center justify-between">
+                                <p className="font-medium">{exercise.name}</p>
+                                {renderTypeBadge(exercise.type)}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -205,6 +210,34 @@ const RecordAdd: React.FC<AddRecordProps> = ({
                 
                 {selectedExercise && (
                   <>
+                    {/* Weight Input - Only show for strength exercises */}
+                    {selectedExercise.type === 'strength' && (
+                      <div className="mb-4">
+                        <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
+                          Weight
+                        </label>
+                        <div className="flex space-x-2">
+                          <input
+                            type="number"
+                            id="weight"
+                            value={weight}
+                            onChange={(e) => setWeight(e.target.value)}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter weight"
+                            step="5"
+                          />
+                          <select
+                            value={unit}
+                            onChange={(e) => setUnit(e.target.value as 'kg' | 'lbs')}
+                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="lbs">lbs</option>
+                            <option value="kg">kg</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Count Input */}
                     <div className="mb-4">
                       <label htmlFor="count" className="block text-sm font-medium text-gray-700 mb-1">
@@ -241,6 +274,7 @@ const RecordAdd: React.FC<AddRecordProps> = ({
                         1 = Very Easy, 10 = Maximum Effort
                       </p>
                     </div>
+                    
                     
                     {/* Notes Input */}
                     <div className="mb-4">
@@ -280,6 +314,9 @@ const RecordAdd: React.FC<AddRecordProps> = ({
                   </button>
                 </div>
               </form>
+              <div className="text-sm text-gray-500 mt-1">
+                Default: {selectedExercise && formatDefaultCount(selectedExercise.type, selectedExercise.defaultCount)}
+              </div>
             </div>
           </div>
         </div>

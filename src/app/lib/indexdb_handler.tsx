@@ -14,6 +14,8 @@ interface ExerciseRecord {
     count: number;
     rpe: number | null;
     note: string;
+    weight?: number;
+    unit?: 'kg' | 'lbs';
 }
 
 interface PlanExercise {
@@ -268,7 +270,9 @@ const ExerciseDB = {
                 time: record.time || new Date().toTimeString().split(' ')[0],
                 count: record.count,
                 rpe: record.rpe || null,
-                note: record.note || ''
+                note: record.note || '',
+                weight: record.weight || null,
+                unit: record.unit || 'lbs'
             });
 
             request.onsuccess = (event: Event) => resolve((event.target as IDBRequest).result as number);
@@ -300,8 +304,7 @@ const ExerciseDB = {
             const store = transaction.objectStore(this.recordStore);
             const index = store.index('dateIndex');
             const range = IDBKeyRange.bound(startDate, endDate);
-            const request = index.getAll(range);
-
+            const request = index.getAll(range)
             request.onsuccess = (event: Event) => resolve((event.target as IDBRequest).result);
             request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
             transaction.oncomplete = () => db.close();
@@ -323,7 +326,10 @@ const ExerciseDB = {
     },
 
     // Delete a record by ID
-    async deleteRecord(recordId: number): Promise<boolean> {
+    async deleteRecord(recordId: number | undefined): Promise<boolean> {
+        if (!recordId) {
+            throw new Error('Record ID is required');
+        }
         const db = await this.open();
         return new Promise((resolve, reject) => {
             const transaction = db.transaction([this.recordStore], 'readwrite');
@@ -637,6 +643,168 @@ const ExerciseDB = {
             transaction.oncomplete = () => db.close();
         });
     },
+
+    async updateRecord(id: number | undefined, record: ExerciseRecord): Promise<boolean> {
+        if (!id) {
+            throw new Error('Record ID is required');
+        }
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([this.recordStore], 'readwrite');
+            const store = transaction.objectStore(this.recordStore);
+            const request = store.get(id);
+
+            request.onsuccess = (event: Event) => {
+                const existingRecord = (event.target as IDBRequest).result as ExerciseRecord;
+                if (!existingRecord) {
+                    reject(new Error('Record not found'));
+                    return;
+                }
+
+                const updatedRecord = { ...existingRecord, ...record };
+                const updateRequest = store.put(updatedRecord);
+
+                updateRequest.onsuccess = () => resolve(true);
+                updateRequest.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            };
+
+            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            transaction.oncomplete = () => db.close();
+        });
+    },
+    // Clear all record
+    async clearAllRecords(): Promise<boolean> {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([this.recordStore], 'readwrite');
+            const store = transaction.objectStore(this.recordStore);
+            const request = store.clear();
+
+            request.onsuccess = () => resolve(true);
+            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            transaction.oncomplete = () => db.close();
+        });
+    },
+
+    // Populate sample records
+    async populateSampleRecords(): Promise<boolean> {
+        try {
+            // Create dates for the last 3 days
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const twoDaysAgo = new Date(today);
+            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+            const sampleRecords: ExerciseRecord[] = [
+                // Today's records
+                {
+                    exerciseName: 'Push-ups',
+                    count: 20,
+                    rpe: 7,
+                    note: 'Morning session',
+                    date: today.toISOString().split('T')[0],
+                    time: '07:30:00',
+                    weight: undefined,
+                    unit: 'lbs'
+                },
+                {
+                    exerciseName: 'Running',
+                    count: 1800,
+                    rpe: 6,
+                    note: 'Easy morning jog',
+                    date: today.toISOString().split('T')[0],
+                    time: '08:15:00',
+                    weight: undefined,
+                    unit: 'lbs'
+                },
+                {
+                    exerciseName: 'Bench Press',
+                    count: 8,
+                    rpe: 8,
+                    note: 'PR attempt',
+                    date: today.toISOString().split('T')[0],
+                    time: '16:45:00',
+                    weight: 185,
+                    unit: 'lbs'
+                },
+                {
+                    exerciseName: 'Squats',
+                    count: 12,
+                    rpe: 7,
+                    note: 'Evening workout',
+                    date: today.toISOString().split('T')[0],
+                    time: '17:30:00',
+                    weight: 225,
+                    unit: 'lbs'
+                },
+                {
+                    exerciseName: 'Planks',
+                    count: 60,
+                    rpe: 6,
+                    note: 'Core finisher',
+                    date: today.toISOString().split('T')[0],
+                    time: '18:00:00',
+                    weight: undefined,
+                    unit: 'lbs'
+                },
+
+                // Yesterday's records
+                {
+                    exerciseName: 'Pull-ups',
+                    count: 10,
+                    rpe: 8,
+                    note: 'Morning workout',
+                    date: yesterday.toISOString().split('T')[0],
+                    time: '08:00:00',
+                    weight: undefined,
+                    unit: 'lbs'
+                },
+                {
+                    exerciseName: 'Deadlift',
+                    count: 5,
+                    rpe: 9,
+                    note: 'Heavy singles',
+                    date: yesterday.toISOString().split('T')[0],
+                    time: '17:00:00',
+                    weight: 315,
+                    unit: 'lbs'
+                },
+
+                // Two days ago records
+                {
+                    exerciseName: 'Running',
+                    count: 2400,
+                    rpe: 7,
+                    note: 'Long distance run',
+                    date: twoDaysAgo.toISOString().split('T')[0],
+                    time: '07:00:00',
+                    weight: undefined,
+                    unit: 'lbs'
+                },
+                {
+                    exerciseName: 'Push-ups',
+                    count: 15,
+                    rpe: 6,
+                    note: 'Evening session',
+                    date: twoDaysAgo.toISOString().split('T')[0],
+                    time: '19:30:00',
+                    weight: undefined,
+                    unit: 'lbs'
+                }
+            ];
+
+            for (const record of sampleRecords) {
+                await this.addRecord(record);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error populating sample records:', error);
+            return false;
+        }
+    },
+
 };
 
 // Helper Functions
