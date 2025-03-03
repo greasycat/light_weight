@@ -5,8 +5,9 @@ import ConfigEdit from './config_edit'
 import ExerciseList from './exercise_list'
 import RecordList from './record_list'
 import WeekTracker from './week_tracker'
+import PlanList from './plan_list'
 
-type TabType = 'dashboard' | 'exercises' | 'records' | 'settings';
+type TabType = 'dashboard' | 'exercises' | 'records' | 'plans' | 'settings';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
@@ -16,6 +17,7 @@ export default function Dashboard() {
     { id: 'dashboard', name: "Dashboard" },
     { id: 'exercises', name: 'Exercises' },
     { id: 'records', name: 'Records' },
+    { id: 'plans', name: 'Plans' },
     { id: 'settings', name: 'Settings' },
   ]
 
@@ -97,6 +99,8 @@ export default function Dashboard() {
         {activeTab === 'exercises' && <ExerciseList />}
 
         {activeTab === 'records' && <RecordList />}
+
+        {activeTab === 'plans' && <PlanList />}
 
         {activeTab === 'settings' && (
           <div className="bg-white rounded-lg shadow-lg p-6">

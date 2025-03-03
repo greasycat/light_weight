@@ -115,17 +115,27 @@ export default function RecordForm({
         unit: unit
       }
 
+      let success: boolean;
+
       if (record) {
-        await ExerciseDB.updateRecord(record.id, recordData)
+        success = await ExerciseDB.updateRecord(record.id, recordData)
       } else {
         const recordId = await ExerciseDB.addRecord(recordData)
         recordData.id = recordId
+        success = true
+
+      }
+
+      if (!success) {
+        setError('Failed to save record');
+        return;
       }
 
       onComplete()
       resetForm()
     } catch (err) {
-      console.error('Error saving record:', err)
+      setError('Failed to save record');
+      console.error('Error saving record:', err);
     }
   }
 

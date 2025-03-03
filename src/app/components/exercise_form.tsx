@@ -38,16 +38,22 @@ export default function ExerciseForm({ exercise, onComplete, onCancel, onDelete 
         instruction
       }
 
+      let success: boolean;
       if (exercise) {
-        await ExerciseDB.updateExercise(exercise.name, exerciseData)
+        success = await ExerciseDB.updateExercise(exercise.name, exerciseData);
       } else {
-        await ExerciseDB.addExercise(exerciseData)
+        success = await ExerciseDB.addExercise(exerciseData);
       }
 
-      onComplete()
+      if (!success) {
+        setError('Failed to save exercise');
+        return;
+      }
+
+      onComplete();
     } catch (err) {
-      setError('Failed to save exercise')
-      console.error('Error saving exercise:', err)
+      setError('Failed to save exercise');
+      console.error('Error saving exercise:', err);
     }
   }
 

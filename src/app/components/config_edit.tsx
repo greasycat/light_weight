@@ -9,6 +9,8 @@ export default function ConfigEdit() {
   const [showPanel, setShowPanel] = useState(false)
   const [dbUrl, setDbUrl] = useState(config.postgresUrl || '')
   const [loading, setLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   const handleDbUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDbUrl(e.target.value)
@@ -59,6 +61,38 @@ export default function ConfigEdit() {
     } catch (error) {
       console.error('Error clearing exercises:', error)
       setLoading(false)
+    }
+  }
+
+  const handlePopulateSamplePlans = async () => {
+    try {
+      setIsLoading(true)
+      setMessage(null)
+      await ExerciseDB.populateSamplePlans()
+      setMessage({ text: 'Sample plans added successfully!', type: 'success' })
+    } catch (error) {
+      setMessage({ text: 'Failed to add sample plans', type: 'error' })
+      console.error('Error adding sample plans:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleClearAllPlans = async () => {
+    if (!window.confirm('Are you sure you want to delete all plans? This cannot be undone.')) {
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      setMessage(null)
+      await ExerciseDB.clearAllPlans()
+      setMessage({ text: 'All plans deleted successfully!', type: 'success' })
+    } catch (error) {
+      setMessage({ text: 'Failed to delete plans', type: 'error' })
+      console.error('Error deleting plans:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -188,6 +222,30 @@ export default function ConfigEdit() {
                 </button>
               </div>
             </div>
+
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Sample Data</h2>
+              <div className="flex space-x-4">
+                <button
+                  onClick={handlePopulateSamplePlans}
+                  disabled={isLoading}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md 
+                    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Adding...' : 'Add Sample Plans'}
+                </button>
+                <button
+                  onClick={handleClearAllPlans}
+                  disabled={isLoading}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md 
+                    hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Deleting...' : 'Delete All Plans'}
+                </button>
+              </div>
+            </div>
           </div>
 
           {showPanel && (
@@ -200,6 +258,14 @@ export default function ConfigEdit() {
           )}
         </div>
       </div>
+
+      {message && (
+        <div className={`p-3 rounded-md mb-4 ${
+          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
     </div>
   )
 }

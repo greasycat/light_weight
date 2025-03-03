@@ -184,7 +184,7 @@ const ExerciseDB = {
         try {
             // Get all exercises first
             const exercises = await this.getAllExercises();
-            
+
             // Delete all records
             const recordTransaction = db.transaction([this.recordStore], 'readwrite');
             const recordStore = recordTransaction.objectStore(this.recordStore);
@@ -345,56 +345,11 @@ const ExerciseDB = {
     // Plan Functions
     // -------------
 
-    // Create a new workout plan
-    async addPlan(plan: Omit<Plan, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-        const db = await this.open();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.planStore], 'readwrite');
-            const store = transaction.objectStore(this.planStore);
-
-            // Ensure required structure
-            if (!plan.name) {
-                reject(new Error('Plan must have a name'));
-                return;
-            }
-
-            if (!Array.isArray(plan.exercises) || plan.exercises.length === 0) {
-                reject(new Error('Plan must contain exercises'));
-                return;
-            }
-
-            // Validate exercises structure
-            for (const exercise of plan.exercises) {
-                if (!exercise.name || !('count' in exercise)) {
-                    reject(new Error('Each exercise must have a name and count'));
-                    return;
-                }
-            }
-
-            // Validate schedule format (e.g., "0100101")
-            if (!/^[01]{7}$/.test(plan.schedule)) {
-                reject(new Error('Schedule must be a 7-character string of 0s and 1s'));
-                return;
-            }
-
-            const request = store.add({
-                name: plan.name,
-                exercises: plan.exercises,
-                schedule: plan.schedule,
-                createdAt: new Date().toISOString()
-            });
-
-            request.onsuccess = (event: Event) => resolve((event.target as IDBRequest).result as number);
-            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-            transaction.oncomplete = () => db.close();
-        });
-    },
-
-    // Get all workout plans
+    // Get all plans
     async getAllPlans(): Promise<Plan[]> {
         const db = await this.open();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.planStore], 'readonly');
+            const transaction = db.transaction(this.planStore, 'readonly');
             const store = transaction.objectStore(this.planStore);
             const request = store.getAll();
 
@@ -404,110 +359,107 @@ const ExerciseDB = {
         });
     },
 
-    // Get plan by ID
-    async getPlan(planId: number): Promise<Plan | undefined> {
+    // Add a new plan
+    async addPlan(plan: Omit<Plan, 'id'>): Promise<number> {
         const db = await this.open();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.planStore], 'readonly');
+            const transaction = db.transaction(this.planStore, 'readwrite');
             const store = transaction.objectStore(this.planStore);
-            const request = store.get(planId);
+            const request = store.add({
+                ...plan,
+                createdAt: new Date().toISOString(),
+            });
 
-            request.onsuccess = (event: Event) => resolve((event.target as IDBRequest).result);
-            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-            transaction.oncomplete = () => db.close();
-        });
-    },
-
-    // Get plan by name
-    async getPlanByName(planName: string): Promise<Plan | undefined> {
-        const db = await this.open();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.planStore], 'readonly');
-            const store = transaction.objectStore(this.planStore);
-            const index = store.index('nameIndex');
-            const request = index.get(planName);
-
-            request.onsuccess = (event: Event) => resolve((event.target as IDBRequest).result);
+            request.onsuccess = (event: Event) => resolve((event.target as IDBRequest).result as number);
             request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
             transaction.oncomplete = () => db.close();
         });
     },
 
     // Update an existing plan
-    async updatePlan(planId: number, updatedPlan: Partial<Omit<Plan, 'id' | 'createdAt' | 'updatedAt'>>): Promise<boolean> {
-        const db = await this.open();
-        return new Promise(async (resolve, reject) => {
-            try {
-                // Get the current plan
-                const transaction = db.transaction([this.planStore], 'readwrite');
-                const store = transaction.objectStore(this.planStore);
-                const getCurrentPlan = store.get(planId);
-
-                getCurrentPlan.onsuccess = (event: Event) => {
-                    const currentPlan = (event.target as IDBRequest).result as Plan;
-
-                    if (!currentPlan) {
-                        reject(new Error(`Plan with ID ${planId} not found`));
-                        return;
-                    }
-
-                    // Update fields
-                    const plan: Plan = {
-                        ...currentPlan,
-                        name: updatedPlan.name || currentPlan.name,
-                        exercises: updatedPlan.exercises || currentPlan.exercises,
-                        schedule: updatedPlan.schedule || currentPlan.schedule,
-                        updatedAt: new Date().toISOString()
-                    };
-
-                    // Validate schedule format (e.g., "0100101")
-                    if (!/^[01]{7}$/.test(plan.schedule)) {
-                        reject(new Error('Schedule must be a 7-character string of 0s and 1s'));
-                        return;
-                    }
-
-                    // Save updated plan
-                    const updateRequest = store.put(plan);
-
-                    updateRequest.onsuccess = () => resolve(true);
-                    updateRequest.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-                };
-
-                getCurrentPlan.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-                transaction.oncomplete = () => db.close();
-            } catch (error) {
-                db.close();
-                reject(error);
-            }
-        });
-    },
-
-    // Delete a plan
-    async deletePlan(planId: number): Promise<boolean> {
+    async updatePlan(id: number, plan: Plan): Promise<boolean> {
         const db = await this.open();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.planStore], 'readwrite');
+            const transaction = db.transaction(this.planStore, 'readwrite');
             const store = transaction.objectStore(this.planStore);
-            const request = store.delete(planId);
+            const request = store.get(id);
 
-            request.onsuccess = () => resolve(true);
+            request.onsuccess = (event: Event) => {
+                const existingPlan = (event.target as IDBRequest).result as Plan;
+                if (!existingPlan) {
+                    reject(new Error('Plan not found'));
+                    return;
+                }
+
+                const updatedPlan = { ...existingPlan, ...plan };
+                const updateRequest = store.put(updatedPlan);
+
+                updateRequest.onsuccess = () => resolve(true);
+                updateRequest.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            };
+
+            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            transaction.oncomplete = () => db.close();
+
+        });
+    },
+    // Delete a plan
+    async deletePlan(id: number): Promise<void> {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(this.planStore, 'readwrite');
+            const store = transaction.objectStore(this.planStore);
+            const request = store.delete(id);
+
+            request.onsuccess = () => resolve();
             request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
             transaction.oncomplete = () => db.close();
         });
     },
 
-    // Get plan for today
-    async getTodayPlans(): Promise<Plan[]> {
-        const plans = await this.getAllPlans();
-        const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+    // Populate sample plans
+    async populateSamplePlans(): Promise<boolean> {
+        const samplePlans: Omit<Plan, 'id'>[] = [
+            {
+                name: 'Strength Training',
+                exercises: [
+                    { name: 'Push-ups', count: -1 },
+                    { name: 'Pull-ups', count: -1 },
+                    { name: 'Squats', count: -1 },
+                ],
+                schedule: '1010100', // Mon, Wed, Fri
+                createdAt: new Date().toISOString(),
+            },
+            {
+                name: 'Cardio Days',
+                exercises: [
+                    { name: 'Running', count: 1800 }, // 30 minutes
+                    { name: 'Jumping Jacks', count: 100 },
+                ],
+                schedule: '0101010', // Tue, Thu, Sat
+                createdAt: new Date().toISOString(),
+            },
+            {
+                name: 'Core Workout',
+                exercises: [
+                    { name: 'Planks', count: 60 },
+                    { name: 'Crunches', count: 50 },
+                    { name: 'Russian Twists', count: 30 },
+                ],
+                schedule: '1111100', // Mon-Fri
+                createdAt: new Date().toISOString(),
+            },
+        ]
 
-        // Filter plans that are scheduled for today
-        return plans.filter(plan => {
-            const scheduleArray = plan.schedule.split('');
-            // Adjust for Sunday being 0 in JS but 6 in our schedule string
-            const dayIndex = today === 0 ? 6 : today - 1;
-            return scheduleArray[dayIndex] === '1';
-        });
+        try {
+            for (const plan of samplePlans) {
+                await this.addPlan(plan)
+            }
+            return true
+        } catch (error) {
+            console.error('Error populating sample plans:', error)
+            return false
+        }
     },
 
     // Statistics and Analysis Functions
@@ -612,9 +564,18 @@ const ExerciseDB = {
         };
 
         try {
-            await this.addPlan(basicPlan);
-            await this.addPlan(cardioFocus);
-            await this.addPlan(weekendWarrior);
+            await this.addPlan({
+                ...basicPlan,
+                createdAt: new Date().toISOString(),
+            });
+            await this.addPlan({
+                ...cardioFocus,
+                createdAt: new Date().toISOString(),
+            });
+            await this.addPlan({
+                ...weekendWarrior,
+                createdAt: new Date().toISOString(),
+            });
             return true;
         } catch (error) {
             console.error('Error adding sample plans:', error);
@@ -805,6 +766,20 @@ const ExerciseDB = {
         }
     },
 
+    // Clear all plans
+    async clearAllPlans(): Promise<boolean> {
+        const db = await this.open()
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(this.planStore, 'readwrite')
+            const store = transaction.objectStore(this.planStore)
+            const request = store.clear()
+
+            request.onsuccess = () => resolve(true)
+            request.onerror = (event: Event) => reject((event.target as IDBRequest).error)
+            transaction.oncomplete = () => db.close()
+        })
+    },
+
 };
 
 // Helper Functions
@@ -883,7 +858,8 @@ async function createWorkoutPlan(
         const planId = await ExerciseDB.addPlan({
             name,
             exercises,
-            schedule
+            schedule,
+            createdAt: new Date().toISOString(),
         });
         console.log(`Workout plan '${name}' created with ID: ${planId}`);
         return planId;
@@ -891,71 +867,6 @@ async function createWorkoutPlan(
         console.error('Failed to create workout plan:', error);
         return null;
     }
-}
-
-// Create a sample plan
-async function createSamplePlan(): Promise<number | null> {
-    const exercises: PlanExercise[] = [
-        { name: 'Push-ups', count: -1 }, // Use default count
-        { name: 'Squats', count: 20 },   // Override default count
-        { name: 'Plank', count: 45 }     // Override default count
-    ];
-
-    // Schedule for Monday, Wednesday, Friday (0101010)
-    return await createWorkoutPlan('Beginner Strength', exercises, '0101010');
-}
-
-interface PlanWithDefaultCounts extends Plan {
-    exercises: (PlanExercise & { defaultCount?: string })[];
-}
-
-// Get today's workout plans
-async function getTodaysWorkout(): Promise<PlanWithDefaultCounts[]> {
-    const todayPlans = await ExerciseDB.getTodayPlans();
-
-    if (todayPlans.length === 0) {
-        console.log('No workouts scheduled for today');
-        return [];
-    }
-
-    // Process plans to include default counts from exercise definitions
-    for (const plan of todayPlans) {
-        for (const exercise of plan.exercises) {
-                if (exercise.count === -1) {
-                    // Fetch the default count for this exercise
-                    const exerciseData = await ExerciseDB.getExercise(exercise.name);
-                    if (exerciseData) {
-            try {
-                        // check type of exerciseData
-                        if (exerciseData.type === 'strength') {
-                            // separate sets and reps with regex matching 3s4r
-                            const setsAndReps = exerciseData.defaultCount.match(/(\d+)s(\d+)r/);
-                            if (setsAndReps) {
-                                exercise.count = parseInt(setsAndReps[1]);
-                            }
-                            else {
-                                exercise.count = 0;
-                            }
-                        }
-                        else if (exerciseData.type === 'cardio') {
-
-                            exercise.count = parseInt(exerciseData.defaultCount);
-                        }
-                        else if (exerciseData.type === 'core') {
-                            exercise.count = parseInt(exerciseData.defaultCount);
-                        }
-                    }
-            catch (error) {
-                console.error('Error fetching exercise data:', error);
-                exercise.count = 0;
-            }
-        }
-            }
-        }
-    }
-
-    console.log(`Found ${todayPlans.length} workout(s) for today`);
-    return todayPlans as PlanWithDefaultCounts[];
 }
 
 // Get exercise statistics
@@ -985,11 +896,7 @@ export {
     initializeExerciseDatabase,
     addExerciseRecord,
     deleteExerciseAndRecords,
-    createWorkoutPlan,
-    createSamplePlan,
-    getTodaysWorkout,
     getExerciseProgress,
-    // Type exports
 };
 
 export type { Exercise, ExerciseRecord, Plan, stats, ExerciseStats, ExerciseWithStats };
