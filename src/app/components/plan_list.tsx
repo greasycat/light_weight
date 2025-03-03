@@ -7,11 +7,11 @@ export default function PlanList() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
+  const [, setEditingPlan] = useState<Plan | null>(null)
   const [pressedPlan, setPressedPlan] = useState<Plan | null>(null)
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const [_, setIsLongPressing] = useState(false)
-  const [showForm, setShowForm] = useState(false)
+  const [, setIsLongPressing] = useState(false)
+  const [, setShowForm] = useState(false)
 
   const loadPlans = async () => {
     try {
@@ -74,17 +74,17 @@ export default function PlanList() {
     setPressedPlan(null)
   }
 
-  const handlePlanComplete = async () => {
-    await loadPlans()
-    setEditingPlan(null)
-    setShowForm(false)
-  }
+  // const handlePlanComplete = async () => {
+  //   await loadPlans()
+  //   setEditingPlan(null)
+  //   setShowForm(false)
+  // }
 
-  const handlePlanDelete = async () => {
-    await loadPlans()
-    setEditingPlan(null)
-    setShowForm(false)
-  }
+  // const handlePlanDelete = async () => {
+  //   await loadPlans()
+  //   setEditingPlan(null)
+  //   setShowForm(false)
+  // }
 
   const formatSchedule = (schedule: string): string => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']

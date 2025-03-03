@@ -18,7 +18,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
   const [editingRecord, setEditingRecord] = useState<ExerciseRecord | null>(null)
   const [pressedRecord, setPressedRecord] = useState<ExerciseRecord | null>(null)
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const [_, setIsLongPressing] = useState(false)
+  const [, setIsLongPressing] = useState(false)
 
   useEffect(() => {
     loadRecords()

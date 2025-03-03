@@ -153,7 +153,7 @@ export default function ConfigEdit() {
                   Save Encrypted
                 </button>
                 <p className="text-xs text-gray-500 mt-3">
-                  Use @greasycat's authentication service by default. You can set up your own authentication service as documented. The authentication service only stores a hashed version of your password.
+                  Use @greasycat authentication service by default. You can set up your own authentication service as documented. The authentication service only stores a hashed version of your password.
                 </p>
 
                 <button

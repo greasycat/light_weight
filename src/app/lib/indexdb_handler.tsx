@@ -182,10 +182,6 @@ const ExerciseDB = {
     async clearAllExercises(): Promise<boolean> {
         const db = await this.open();
         try {
-            // Get all exercises first
-            const exercises = await this.getAllExercises();
-
-            // Delete all records
             const recordTransaction = db.transaction([this.recordStore], 'readwrite');
             const recordStore = recordTransaction.objectStore(this.recordStore);
             recordStore.clear();

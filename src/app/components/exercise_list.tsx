@@ -18,7 +18,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [pressedExercise, setPressedExercise] = useState<Exercise | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [_, setIsLongPressing] = useState(false);
+  const [, setIsLongPressing] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   const loadExercises = async () => {
