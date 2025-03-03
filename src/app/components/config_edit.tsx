@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAppConfig, StorageType, Theme } from '@/app/lib/config_store'
 
-export default function ConfigPanel() {
+export default function ConfigEdit() {
   const { config, loaded, toggleStorageType, toggleTheme, updateConfig} = useAppConfig()
   const [showPanel, setShowPanel] = useState(false)
   const [dbUrl, setDbUrl] = useState(config.postgresUrl || '')

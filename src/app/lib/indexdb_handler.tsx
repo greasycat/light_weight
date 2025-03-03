@@ -176,14 +176,55 @@ const ExerciseDB = {
         }
     },
 
+    // Clear all exercises and their records
+    async clearAllExercises(): Promise<boolean> {
+        const db = await this.open();
+        try {
+            // Get all exercises first
+            const exercises = await this.getAllExercises();
+            
+            // Delete all records
+            const recordTransaction = db.transaction([this.recordStore], 'readwrite');
+            const recordStore = recordTransaction.objectStore(this.recordStore);
+            recordStore.clear();
+
+            // Delete all exercises
+            const exerciseTransaction = db.transaction([this.exerciseStore], 'readwrite');
+            const exerciseStore = exerciseTransaction.objectStore(this.exerciseStore);
+            exerciseStore.clear();
+
+            return true;
+        } catch (error) {
+            console.error('Error clearing exercises:', error);
+            return false;
+        } finally {
+            db.close();
+        }
+    },
+
     // Add multiple exercises at once
     async populateSampleExercises(): Promise<boolean> {
         const sampleExercises: Exercise[] = [
             { name: 'Push-ups', type: 'strength', defaultCount: '3s10r', instruction: 'Keep your back straight and lower your chest to the ground' },
             { name: 'Squats', type: 'strength', defaultCount: '3s15r', instruction: 'Keep your knees aligned with your toes' },
-            { name: 'Plank', type: 'core', defaultCount: '30s', instruction: 'Hold position with straight back and tight core' },
+            { name: 'Plank', type: 'core', defaultCount: '30', instruction: 'Hold position with straight back and tight core' },
             { name: 'Jumping Jacks', type: 'cardio', defaultCount: '45', instruction: 'Jump with hands above head and feet apart' },
-            { name: 'Lunges', type: 'strength', defaultCount: '2s12r', instruction: 'Step forward and lower knee until both knees form 90-degree angles' }
+            { name: 'Lunges', type: 'strength', defaultCount: '2s12r', instruction: 'Step forward and lower knee until both knees form 90-degree angles' },
+            { name: 'Pull-ups', type: 'strength', defaultCount: '3s8r', instruction: 'Pull chin above bar with controlled movement' },
+            { name: 'Mountain Climbers', type: 'cardio', defaultCount: '60', instruction: 'Alternate bringing knees to chest while in plank position' },
+            { name: 'Bicep Curls', type: 'strength', defaultCount: '3s12r', instruction: 'Keep elbows fixed and curl weights toward shoulders' },
+            { name: 'Burpees', type: 'cardio', defaultCount: '20', instruction: 'Drop to push-up, jump back up and reach overhead' },
+            { name: 'Russian Twists', type: 'core', defaultCount: '3', instruction: 'Rotate torso side to side while seated with feet elevated' },
+            { name: 'Deadlifts', type: 'strength', defaultCount: '3s10r', instruction: 'Keep back straight and push through heels when lifting' },
+            { name: 'High Knees', type: 'cardio', defaultCount: '45', instruction: 'Run in place bringing knees to hip height' },
+            { name: 'Dips', type: 'strength', defaultCount: '3s12r', instruction: 'Lower body between parallel bars until elbows reach 90 degrees' },
+            { name: 'Side Planks', type: 'core', defaultCount: '30', instruction: 'Stack feet and raise hip off ground with straight body line' },
+            { name: 'Bench Press', type: 'strength', defaultCount: '3s8r', instruction: 'Lower bar to chest and press upward with controlled movement' },
+            { name: 'Jump Rope', type: 'cardio', defaultCount: '2m', instruction: 'Maintain small jumps with wrists doing most of the work' },
+            { name: 'Leg Raises', type: 'core', defaultCount: '3s15r', instruction: 'Keep lower back pressed to floor while raising legs' },
+            { name: 'Shoulder Press', type: 'strength', defaultCount: '3s10r', instruction: 'Press weights overhead without arching lower back' },
+            { name: 'Box Jumps', type: 'cardio', defaultCount: '3', instruction: 'Jump onto box with soft landing, step back down' },
+            { name: 'Superman', type: 'core', defaultCount: '3', instruction: 'Lift arms and legs off ground simultaneously while lying on stomach' }
         ];
 
         const db = await this.open();
@@ -573,6 +614,28 @@ const ExerciseDB = {
             console.error('Error adding sample plans:', error);
             return false;
         }
+    },
+
+    // Update an exercise
+    async updateExercise(oldName: string, updatedExercise: Exercise): Promise<boolean> {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([this.exerciseStore], 'readwrite');
+            const store = transaction.objectStore(this.exerciseStore);
+
+            // First delete the old exercise
+            const deleteRequest = store.delete(oldName);
+
+            deleteRequest.onsuccess = () => {
+                // Then add the updated exercise
+                const addRequest = store.add(updatedExercise);
+                addRequest.onsuccess = () => resolve(true);
+                addRequest.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            };
+
+            deleteRequest.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            transaction.oncomplete = () => db.close();
+        });
     },
 };
 
