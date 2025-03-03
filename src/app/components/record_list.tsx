@@ -22,7 +22,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
 
   useEffect(() => {
     loadRecords()
-  }, [selectedDate])
+  },[])
 
   const loadRecords = async () => {
     try {

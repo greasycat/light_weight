@@ -844,27 +844,6 @@ async function deleteExerciseAndRecords(exerciseName: string): Promise<boolean> 
     return success;
 }
 
-// Create a workout plan
-async function createWorkoutPlan(
-    name: string,
-    exercises: PlanExercise[],
-    schedule: string
-): Promise<number | null> {
-    try {
-        const planId = await ExerciseDB.addPlan({
-            name,
-            exercises,
-            schedule,
-            createdAt: new Date().toISOString(),
-        });
-        console.log(`Workout plan '${name}' created with ID: ${planId}`);
-        return planId;
-    } catch (error) {
-        console.error('Failed to create workout plan:', error);
-        return null;
-    }
-}
-
 // Get exercise statistics
 async function getExerciseProgress(exerciseName: string): Promise<ExerciseStats | null> {
     const stats = await ExerciseDB.getExerciseStats(exerciseName);

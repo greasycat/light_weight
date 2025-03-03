@@ -21,7 +21,7 @@ export default function WeekTracker() {
         }
 
         fetchWeekRecords()
-    }, [startOfCurrentWeek])
+    }, [])
 
     // Generate array of dates for the week
     const weekDates = Array.from({ length: 7 }, (_, i) => {
