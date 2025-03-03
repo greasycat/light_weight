@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import ConfigEdit from './config_edit'
 import ExerciseList from './exercise_list'
@@ -10,6 +10,7 @@ type TabType = 'dashboard' | 'exercises' | 'records' | 'settings';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
+  const [isAnimating, setIsAnimating] = useState(false)
 
   const tabs = [
     { id: 'dashboard', name: "Dashboard" },
@@ -17,6 +18,29 @@ export default function Dashboard() {
     { id: 'records', name: 'Records' },
     { id: 'settings', name: 'Settings' },
   ]
+
+  // Get the current tab index and calculate visible tabs
+  const currentIndex = tabs.findIndex(tab => tab.id === activeTab)
+  
+  // Calculate the indices for visible tabs with wrapping
+  const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length
+  const nextIndex = (currentIndex + 1) % tabs.length
+  
+  const visibleTabs = [
+    tabs[prevIndex],
+    tabs[currentIndex],
+    tabs[nextIndex]
+  ]
+
+  const handleTabClick = async (tabId: TabType) => {
+    if (isAnimating || tabId === activeTab) return
+
+    setIsAnimating(true)
+    
+    setActiveTab(tabId)
+
+    setIsAnimating(false)
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl pt-0">
@@ -27,51 +51,59 @@ export default function Dashboard() {
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex justify-center" aria-label="Tabs">
-          <div className="flex space-x-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
-                className={`
-                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                  ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
-              >
-                {tab.name}
-              </button>
-            ))}
-          </div>
+        <div className="relative flex space-x-8">
+  {visibleTabs.map((tab, index) => {
+    const isActive = index === 1;
+    return (
+      <button
+        key={tab.id}
+        onClick={() => handleTabClick(tab.id as TabType)}
+        disabled={isAnimating}
+        className={`
+          whitespace-nowrap py-2 px-0 border-b-2 font-medium text-sm
+          transition-all duration-300 ease-out
+          ${isActive 
+            ? 'border-blue-500 text-blue-600' 
+            : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'}
+          ${isAnimating ? 'pointer-events-none' : ''}
+        `}
+        style={{
+          transform: `scale(${isActive ? 1.1 : 0.9})`,
+          opacity: isActive ? 1 : 0.8,
+          filter: isActive ? 'none' : 'blur(0.5px)',
+          transformOrigin: 'center bottom'
+        }}
+      >
+        {tab.name}
+      </button>
+    );
+  })}
+</div>
         </nav>
       </div>
 
-      {/* Week Tracker - Show only in dashboard and records tabs */}
-      {(activeTab === 'dashboard') && (
-        <WeekTracker />
-      )}
+      {/* Content */}
+      <div className={`transition-opacity duration-300 ${isAnimating ? 'opacity-50' : 'opacity-100'}`}>
+        {/* Week Tracker */}
+        {activeTab === 'dashboard' && <WeekTracker />}
 
-      {/* Tab Panels */}
-      {activeTab === 'dashboard' && (
-        <div>
-          <RecordList dash={true} />
-        </div>
-      )}
+        {/* Tab Panels */}
+        {activeTab === 'dashboard' && (
+          <div>
+            <RecordList dash={true} />
+          </div>
+        )}
 
-      {activeTab === 'exercises' && (
-        <ExerciseList />
-      )}
+        {activeTab === 'exercises' && <ExerciseList />}
 
-      {activeTab === 'records' && (
-        <RecordList />
-      )}
+        {activeTab === 'records' && <RecordList />}
 
-      {activeTab === 'settings' && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <ConfigEdit />
-        </div>
-      )}
+        {activeTab === 'settings' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <ConfigEdit />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

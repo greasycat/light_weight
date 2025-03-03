@@ -29,16 +29,17 @@ export default function RecordForm({
   const [weight, setWeight] = useState('')
   const [unit, setUnit] = useState<'kg' | 'lbs'>('lbs')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState('')
 
   // Load exercises and set initial values if editing
   useEffect(() => {
-      loadExercises()
-      if (record) {
-        setCount(record.count.toString())
-        setRpe(record.rpe?.toString() || '')
-        setNote(record.note || '')
-        setWeight(record.weight?.toString() || '')
-        setUnit(record.unit || 'lbs')
+    loadExercises()
+    if (record) {
+      setCount(record.count.toString())
+      setRpe(record.rpe?.toString() || '')
+      setNote(record.note || '')
+      setWeight(record.weight?.toString() || '')
+      setUnit(record.unit || 'lbs')
     }
   }, [record])
 
@@ -48,6 +49,9 @@ export default function RecordForm({
       const exercise = exercises.find(e => e.name === record.exerciseName)
       if (exercise) {
         setSelectedExercise(exercise)
+        setError('')
+      } else {
+        setError(`Exercise "${record.exerciseName}" not found. It may have been deleted.`)
       }
     }
   }, [record, exercises])
@@ -167,14 +171,20 @@ export default function RecordForm({
                   type="button"
                   onClick={handleDeleteClick}
                   disabled={isDeleting}
-                  className="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 rounded-md 
-                    hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 
+                  className="px-3 py-1 text-sm font-medium text-pink-50 bg-red-500 rounded-md 
+                    hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 
                     disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
               )}
             </div>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                {error}
+              </div>
+            )}
             
             <form onSubmit={handleSubmit}>
               {/* Exercise Selection */}

@@ -29,7 +29,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
       setLoading(true)
       const records = await ExerciseDB.getRecordsByDateRange(selectedDate, selectedDate)
       const sortedRecords = records.sort((a, b) => 
-        new Date(`${b.date} ${b.time}`).getTime() - new Date(`${a.date} ${a.time}`).getTime()
+        new Date(`${a.date} ${a.time}`).getTime() - new Date(`${b.date} ${b.time}`).getTime()
       )
       setRecords(sortedRecords)
       setLoading(false)
