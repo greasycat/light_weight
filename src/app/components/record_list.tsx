@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { format, addDays, subDays } from 'date-fns'
+import { format, addDays, subDays, parseISO, startOfDay, endOfDay } from 'date-fns'
 import { ExerciseDB, ExerciseRecord } from '../lib/indexdb_handler'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import RecordForm from './record_form'
@@ -13,7 +13,7 @@ interface RecordListProps {
 export default function RecordList({ dash = false }: RecordListProps) {
   const [records, setRecords] = useState<ExerciseRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [selectedDate, setSelectedDate] = useState(new Date())
   const [showForm, setShowForm] = useState(false)
   const [editingRecord, setEditingRecord] = useState<ExerciseRecord | null>(null)
   const [pressedRecord, setPressedRecord] = useState<ExerciseRecord | null>(null)
@@ -22,14 +22,21 @@ export default function RecordList({ dash = false }: RecordListProps) {
 
   useEffect(() => {
     loadRecords()
-  },[])
+  }, [selectedDate])
 
   const loadRecords = async () => {
     try {
       setLoading(true)
-      const records = await ExerciseDB.getRecordsByDateRange(selectedDate, selectedDate)
+      
+      const start = startOfDay(selectedDate)
+      const end = endOfDay(selectedDate)
+      
+      const startDate = start.toISOString()
+      const endDate = end.toISOString()
+      
+      const records = await ExerciseDB.getRecordsByDateRange(startDate, endDate)
       const sortedRecords = records.sort((a, b) => 
-        new Date(`${a.date} ${a.time}`).getTime() - new Date(`${b.date} ${b.time}`).getTime()
+        new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
       )
       setRecords(sortedRecords)
       setLoading(false)
@@ -40,23 +47,18 @@ export default function RecordList({ dash = false }: RecordListProps) {
   }
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(e.target.value)
+    const newDate = parseISO(e.target.value)
+    setSelectedDate(newDate)
   }
 
   const handlePreviousDay = () => {
-    const prevDate = subDays(parseDate(selectedDate), 1)
-    setSelectedDate(format(prevDate, 'yyyy-MM-dd'))
+    const prevDate = subDays(selectedDate, 1)
+    setSelectedDate(prevDate)
   }
 
   const handleNextDay = () => {
-    const nextDate = addDays(parseDate(selectedDate), 1)
-    setSelectedDate(format(nextDate, 'yyyy-MM-dd'))
-  }
-
-  const parseDate = (dateString: string) => {
-    const [year, month, day] = dateString.split("-").map(Number);
-    const date = new Date(year, month - 1, day);
-    return date
+    const nextDate = addDays(selectedDate, 1)
+    setSelectedDate(nextDate)
   }
 
   const handleRecordComplete = async () => {
@@ -71,7 +73,6 @@ export default function RecordList({ dash = false }: RecordListProps) {
     setShowForm(false)
   }
 
-  // Clean up long press timer
   useEffect(() => {
     if (pressedRecord) {
       setIsLongPressing(true)
@@ -144,19 +145,19 @@ export default function RecordList({ dash = false }: RecordListProps) {
               </button>
               <input
                 type="date"
-                value={selectedDate}
+                value={format(selectedDate, 'yyyy-MM-dd')}
                 onChange={handleDateChange}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <button
                 onClick={handleNextDay}
                 className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={selectedDate >= format(new Date(), 'yyyy-MM-dd')}
+                disabled={format(selectedDate, 'yyyy-MM-dd') >= format(new Date(), 'yyyy-MM-dd')}
                 aria-label="Next day"
-              >
+              > 
                 <ChevronRightIcon 
                   className={`h-5 w-5 ${
-                    selectedDate >= format(new Date(), 'yyyy-MM-dd')
+                    format(selectedDate, 'yyyy-MM-dd') >= format(new Date(), 'yyyy-MM-dd')
                       ? 'text-gray-300'
                       : 'text-gray-600'
                   }`} 
@@ -192,7 +193,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
 
       {records.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No workouts recorded {!dash && `on ${format(new Date(selectedDate), 'MMM d, yyyy')}`}
+          No workouts recorded {!dash && `on ${format(selectedDate, 'MMM d, yyyy')}`}
         </div>
       ) : (
         <div className="space-y-2">
@@ -217,7 +218,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
                   </span>
                 </div>
                 <span className="text-xs text-gray-500 select-none">
-                  {format(new Date(`${record.date} ${record.time}`), 'HH:mm')}
+                  {format(new Date(record.dateTime), 'HH:mm')}
                 </span>
               </div>
             </div>
@@ -238,7 +239,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
 
   if (dash) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-gray-50 rounded-md shadow-sm p-6">
         {content}
       </div>
     );

@@ -11,12 +11,13 @@ export default function WeekTracker() {
 
     useEffect(() => {
         const fetchWeekRecords = async () => {
-            const startDate = format(startOfCurrentWeek, 'yyyy-MM-dd')
-            const endDate = format(addDays(startOfCurrentWeek, 6), 'yyyy-MM-dd')
+            const startDate = startOfCurrentWeek.toISOString()
+            const endDate = addDays(startOfCurrentWeek, 6).toISOString()
             const records = await ExerciseDB.getRecordsByDateRange(startDate, endDate)
 
-            // Create a Set of dates that have records
-            const datesSet = new Set(records.map(record => record.date))
+            // Create a Set of dates that have records in local time (yyyy-MM-dd)
+            const datesSet = new Set(records.map(record => format(new Date(record.dateTime), 'yyyy-MM-dd')))
+            console.log(datesSet)
             setDatesWithRecords(datesSet)
         }
 
@@ -43,9 +44,9 @@ export default function WeekTracker() {
                 <div
                     key={index}
                     className={`
-            relative w-12 h-12 flex flex-col items-center justify-center rounded-lg
+            relative w-12 h-12 flex flex-col items-center justify-center rounded-lg shadow-sm
             ${day.isToday
-                            ? 'bg-black text-white'
+                            ? 'bg-gray-400 text-black'
                             : 'bg-gray-50 text-gray-600'
                         }
           `}
@@ -53,13 +54,13 @@ export default function WeekTracker() {
                     <div className="relative">
                         {!day.hasRecords && (
                             <>
-                                <span className="text-xs font-medium">{day.dayName}</span>
+                                <span className="text-xs font-bold">{day.dayName}</span>
                                 <span className="text-sm block text-center">{day.dayNumber}</span>
                             </>
                         )}
                         {day.hasRecords && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-3xl font-extrabold text-white transform scale-110">✔</span>
+                                <span className="text-3xl font-extrabold text-black transform scale-110">X</span>
                             </div>
                         )}
                     </div>

@@ -1,7 +1,7 @@
 // Define interfaces for our data structures
 interface Exercise {
     name: string;
-    type: 'strength' | 'cardio' | 'core';
+    type: 'weight' | 'timed' | 'count';
     defaultCount: string;
     instruction: string;
 }
@@ -9,8 +9,7 @@ interface Exercise {
 interface ExerciseRecord {
     id?: number;
     exerciseName: string;
-    date: string;
-    time: string;
+    dateTime: string;
     count: number;
     rpe: number | null;
     note: string;
@@ -19,7 +18,9 @@ interface ExerciseRecord {
 }
 
 interface PlanExercise {
+    id: number;
     name: string;
+    type: string;
     count: number; // -1 means use default
 }
 
@@ -76,7 +77,7 @@ const ExerciseDB = {
                 if (!db.objectStoreNames.contains(this.recordStore)) {
                     const recordStore = db.createObjectStore(this.recordStore, { keyPath: 'id', autoIncrement: true });
                     recordStore.createIndex('exerciseNameIndex', 'exerciseName', { unique: false });
-                    recordStore.createIndex('dateIndex', 'date', { unique: false });
+                    recordStore.createIndex('dateTimeIndex', 'dateTime', { unique: false });
                 }
                 if (!db.objectStoreNames.contains(this.planStore)) {
                     const planStore = db.createObjectStore(this.planStore, { keyPath: 'id', autoIncrement: true });
@@ -97,6 +98,16 @@ const ExerciseDB = {
             return true;
         } catch (error) {
             console.error('Failed to initialize database:', error);
+            return false;
+        }
+    },
+
+    async removeAllData(): Promise<boolean> {
+        try {
+            await indexedDB.deleteDatabase(this.dbName);
+            return true;
+        } catch (error) {
+            console.error('Failed to remove all data:', error);
             return false;
         }
     },
@@ -203,26 +214,26 @@ const ExerciseDB = {
     // Add multiple exercises at once
     async populateSampleExercises(): Promise<boolean> {
         const sampleExercises: Exercise[] = [
-            { name: 'Push-ups', type: 'strength', defaultCount: '3s10r', instruction: 'Keep your back straight and lower your chest to the ground' },
-            { name: 'Squats', type: 'strength', defaultCount: '3s15r', instruction: 'Keep your knees aligned with your toes' },
-            { name: 'Plank', type: 'core', defaultCount: '30', instruction: 'Hold position with straight back and tight core' },
-            { name: 'Jumping Jacks', type: 'cardio', defaultCount: '45', instruction: 'Jump with hands above head and feet apart' },
-            { name: 'Lunges', type: 'strength', defaultCount: '2s12r', instruction: 'Step forward and lower knee until both knees form 90-degree angles' },
-            { name: 'Pull-ups', type: 'strength', defaultCount: '3s8r', instruction: 'Pull chin above bar with controlled movement' },
-            { name: 'Mountain Climbers', type: 'cardio', defaultCount: '60', instruction: 'Alternate bringing knees to chest while in plank position' },
-            { name: 'Bicep Curls', type: 'strength', defaultCount: '3s12r', instruction: 'Keep elbows fixed and curl weights toward shoulders' },
-            { name: 'Burpees', type: 'cardio', defaultCount: '20', instruction: 'Drop to push-up, jump back up and reach overhead' },
-            { name: 'Russian Twists', type: 'core', defaultCount: '3', instruction: 'Rotate torso side to side while seated with feet elevated' },
-            { name: 'Deadlifts', type: 'strength', defaultCount: '3s10r', instruction: 'Keep back straight and push through heels when lifting' },
-            { name: 'High Knees', type: 'cardio', defaultCount: '45', instruction: 'Run in place bringing knees to hip height' },
-            { name: 'Dips', type: 'strength', defaultCount: '3s12r', instruction: 'Lower body between parallel bars until elbows reach 90 degrees' },
-            { name: 'Side Planks', type: 'core', defaultCount: '30', instruction: 'Stack feet and raise hip off ground with straight body line' },
-            { name: 'Bench Press', type: 'strength', defaultCount: '3s8r', instruction: 'Lower bar to chest and press upward with controlled movement' },
-            { name: 'Jump Rope', type: 'cardio', defaultCount: '2m', instruction: 'Maintain small jumps with wrists doing most of the work' },
-            { name: 'Leg Raises', type: 'core', defaultCount: '3s15r', instruction: 'Keep lower back pressed to floor while raising legs' },
-            { name: 'Shoulder Press', type: 'strength', defaultCount: '3s10r', instruction: 'Press weights overhead without arching lower back' },
-            { name: 'Box Jumps', type: 'cardio', defaultCount: '3', instruction: 'Jump onto box with soft landing, step back down' },
-            { name: 'Superman', type: 'core', defaultCount: '3', instruction: 'Lift arms and legs off ground simultaneously while lying on stomach' }
+            { name: 'Push-ups', type: 'weight', defaultCount: '3s10r', instruction: 'Keep your back straight and lower your chest to the ground' },
+            { name: 'Squats', type: 'weight', defaultCount: '3s15r', instruction: 'Keep your knees aligned with your toes' },
+            { name: 'Plank', type: 'count', defaultCount: '30', instruction: 'Hold position with straight back and tight core' },
+            { name: 'Jumping Jacks', type: 'timed', defaultCount: '45', instruction: 'Jump with hands above head and feet apart' },
+            { name: 'Lunges', type: 'weight', defaultCount: '2s12r', instruction: 'Step forward and lower knee until both knees form 90-degree angles' },
+            { name: 'Pull-ups', type: 'weight', defaultCount: '3s8r', instruction: 'Pull chin above bar with controlled movement' },
+            { name: 'Mountain Climbers', type: 'timed', defaultCount: '60', instruction: 'Alternate bringing knees to chest while in plank position' },
+            { name: 'Bicep Curls', type: 'weight', defaultCount: '3s12r', instruction: 'Keep elbows fixed and curl weights toward shoulders' },
+            { name: 'Burpees', type: 'timed', defaultCount: '20', instruction: 'Drop to push-up, jump back up and reach overhead' },
+            { name: 'Russian Twists', type: 'count', defaultCount: '3', instruction: 'Rotate torso side to side while seated with feet elevated' },
+            { name: 'Deadlifts', type: 'weight', defaultCount: '3s10r', instruction: 'Keep back straight and push through heels when lifting' },
+            { name: 'High Knees', type: 'timed', defaultCount: '45', instruction: 'Run in place bringing knees to hip height' },
+            { name: 'Dips', type: 'weight', defaultCount: '3s12r', instruction: 'Lower body between parallel bars until elbows reach 90 degrees' },
+            { name: 'Side Planks', type: 'count', defaultCount: '30', instruction: 'Stack feet and raise hip off ground with straight body line' },
+            { name: 'Bench Press', type: 'weight', defaultCount: '3s8r', instruction: 'Lower bar to chest and press upward with controlled movement' },
+            { name: 'Jump Rope', type: 'timed', defaultCount: '2m', instruction: 'Maintain small jumps with wrists doing most of the work' },
+            { name: 'Leg Raises', type: 'count', defaultCount: '3s15r', instruction: 'Keep lower back pressed to floor while raising legs' },
+            { name: 'Shoulder Press', type: 'weight', defaultCount: '3s10r', instruction: 'Press weights overhead without arching lower back' },
+            { name: 'Box Jumps', type: 'timed', defaultCount: '3', instruction: 'Jump onto box with soft landing, step back down' },
+            { name: 'Superman', type: 'count', defaultCount: '3', instruction: 'Lift arms and legs off ground simultaneously while lying on stomach' }
         ];
 
         const db = await this.open();
@@ -262,8 +273,7 @@ const ExerciseDB = {
             const store = transaction.objectStore(this.recordStore);
             const request = store.add({
                 exerciseName: record.exerciseName,
-                date: record.date || new Date().toISOString().split('T')[0],
-                time: record.time || new Date().toTimeString().split(' ')[0],
+                dateTime: record.dateTime || new Date().toISOString(),
                 count: record.count,
                 rpe: record.rpe || null,
                 note: record.note || '',
@@ -296,14 +306,35 @@ const ExerciseDB = {
     async getRecordsByDateRange(startDate: string, endDate: string): Promise<ExerciseRecord[]> {
         const db = await this.open();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.recordStore], 'readonly');
-            const store = transaction.objectStore(this.recordStore);
-            const index = store.index('dateIndex');
-            const range = IDBKeyRange.bound(startDate, endDate);
-            const request = index.getAll(range)
-            request.onsuccess = (event: Event) => resolve((event.target as IDBRequest).result);
-            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-            transaction.oncomplete = () => db.close();
+          const transaction = db.transaction([this.recordStore], 'readonly');
+          const store = transaction.objectStore(this.recordStore);
+          const index = store.index('dateTimeIndex');
+          const results: ExerciseRecord[] = [];
+          
+          const cursor = index.openCursor();
+          cursor.onsuccess = (event: Event) => {
+            const cursor = (event.target as IDBRequest).result;
+            if (cursor) {
+              const record = cursor.value;
+              if (record.dateTime >= startDate && record.dateTime <= endDate) {
+                results.push(record);
+              }
+              if (record.dateTime > endDate) {
+                transaction.oncomplete = () => db.close();
+                resolve(results);
+                return;
+              }
+              cursor.continue();
+            } else {
+              transaction.oncomplete = () => db.close();
+              resolve(results);
+            }
+          };
+          
+          cursor.onerror = (event: Event) => {
+            db.close();
+            reject((event.target as IDBRequest).error);
+          };
         });
     },
 
@@ -419,9 +450,9 @@ const ExerciseDB = {
             {
                 name: 'Strength Training',
                 exercises: [
-                    { name: 'Push-ups', count: -1 },
-                    { name: 'Pull-ups', count: -1 },
-                    { name: 'Squats', count: -1 },
+                    { name: 'Push-ups', count: -1, type: 'weight', id: 0 },
+                    { name: 'Pull-ups', count: -1, type: 'weight', id: 1 },
+                    { name: 'Squats', count: -1, type: 'weight', id: 2 },
                 ],
                 schedule: '1010100', // Mon, Wed, Fri
                 createdAt: new Date().toISOString(),
@@ -429,8 +460,8 @@ const ExerciseDB = {
             {
                 name: 'Cardio Days',
                 exercises: [
-                    { name: 'Running', count: 1800 }, // 30 minutes
-                    { name: 'Jumping Jacks', count: 100 },
+                    { name: 'Running', count: 1800, type: 'timed', id: 0 }, // 30 minutes
+                    { name: 'Jumping Jacks', count: 100, type: 'timed', id: 1 },
                 ],
                 schedule: '0101010', // Tue, Thu, Sat
                 createdAt: new Date().toISOString(),
@@ -438,9 +469,9 @@ const ExerciseDB = {
             {
                 name: 'Core Workout',
                 exercises: [
-                    { name: 'Planks', count: 60 },
-                    { name: 'Crunches', count: 50 },
-                    { name: 'Russian Twists', count: 30 },
+                    { name: 'Planks', count: 60, type: 'count', id: 0 },
+                    { name: 'Crunches', count: 50, type: 'count', id: 1 },
+                    { name: 'Russian Twists', count: 30, type: 'count', id: 2 },
                 ],
                 schedule: '1111100', // Mon-Fri
                 createdAt: new Date().toISOString(),
@@ -481,8 +512,8 @@ const ExerciseDB = {
             averageCount: counts.reduce((sum, count) => sum + count, 0) / counts.length,
             maxCount: Math.max(...counts),
             minCount: Math.min(...counts),
-            lastWorkout: records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0],
-            firstWorkout: records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0],
+            lastWorkout: records.sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())[0],
+            firstWorkout: records.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())[0],
             improvement: 0,
             averageRPE: 0
         };
@@ -532,9 +563,9 @@ const ExerciseDB = {
         const basicPlan = {
             name: 'Basic Fitness',
             exercises: [
-                { name: 'Push-ups', count: -1 },
-                { name: 'Jumping Jacks', count: 50 },
-                { name: 'Squats', count: -1 }
+                { name: 'Push-ups', count: -1, type: 'weight', id: 0 },
+                { name: 'Jumping Jacks', count: 50, type: 'timed', id: 1 },
+                { name: 'Squats', count: -1, type: 'weight', id: 2 }
             ],
             schedule: '1010100' // Monday, Wednesday, Friday
         };
@@ -542,8 +573,8 @@ const ExerciseDB = {
         const cardioFocus = {
             name: 'Cardio Focus',
             exercises: [
-                { name: 'Jumping Jacks', count: 100 },
-                { name: 'Plank', count: 30 }
+                { name: 'Jumping Jacks', count: 100, type: 'timed', id: 0 },
+                { name: 'Plank', count: 30, type: 'count', id: 1 }
             ],
             schedule: '0101010' // Tuesday, Thursday, Saturday
         };
@@ -551,10 +582,10 @@ const ExerciseDB = {
         const weekendWarrior = {
             name: 'Weekend Warrior',
             exercises: [
-                { name: 'Push-ups', count: 20 },
-                { name: 'Squats', count: 25 },
-                { name: 'Plank', count: 60 },
-                { name: 'Lunges', count: 30 }
+                { name: 'Push-ups', count: 20, type: 'weight', id: 0 },
+                { name: 'Squats', count: 25, type: 'weight', id: 1 },
+                { name: 'Plank', count: 60, type: 'count', id: 2 },
+                { name: 'Lunges', count: 30, type: 'weight', id: 3 }
             ],
             schedule: '0000011' // Saturday, Sunday
         };
@@ -660,8 +691,7 @@ const ExerciseDB = {
                     count: 20,
                     rpe: 7,
                     note: 'Morning session',
-                    date: today.toISOString().split('T')[0],
-                    time: '07:30:00',
+                    dateTime: today.toISOString(),
                     weight: undefined,
                     unit: 'lbs'
                 },
@@ -670,8 +700,7 @@ const ExerciseDB = {
                     count: 1800,
                     rpe: 6,
                     note: 'Easy morning jog',
-                    date: today.toISOString().split('T')[0],
-                    time: '08:15:00',
+                    dateTime: today.toISOString(),
                     weight: undefined,
                     unit: 'lbs'
                 },
@@ -680,8 +709,7 @@ const ExerciseDB = {
                     count: 8,
                     rpe: 8,
                     note: 'PR attempt',
-                    date: today.toISOString().split('T')[0],
-                    time: '16:45:00',
+                    dateTime: today.toISOString(),
                     weight: 185,
                     unit: 'lbs'
                 },
@@ -690,8 +718,7 @@ const ExerciseDB = {
                     count: 12,
                     rpe: 7,
                     note: 'Evening workout',
-                    date: today.toISOString().split('T')[0],
-                    time: '17:30:00',
+                    dateTime: today.toISOString(),
                     weight: 225,
                     unit: 'lbs'
                 },
@@ -700,8 +727,7 @@ const ExerciseDB = {
                     count: 60,
                     rpe: 6,
                     note: 'Core finisher',
-                    date: today.toISOString().split('T')[0],
-                    time: '18:00:00',
+                    dateTime: today.toISOString(),
                     weight: undefined,
                     unit: 'lbs'
                 },
@@ -712,8 +738,7 @@ const ExerciseDB = {
                     count: 10,
                     rpe: 8,
                     note: 'Morning workout',
-                    date: yesterday.toISOString().split('T')[0],
-                    time: '08:00:00',
+                    dateTime: yesterday.toISOString(),
                     weight: undefined,
                     unit: 'lbs'
                 },
@@ -722,8 +747,7 @@ const ExerciseDB = {
                     count: 5,
                     rpe: 9,
                     note: 'Heavy singles',
-                    date: yesterday.toISOString().split('T')[0],
-                    time: '17:00:00',
+                    dateTime: yesterday.toISOString(),
                     weight: 315,
                     unit: 'lbs'
                 },
@@ -734,8 +758,7 @@ const ExerciseDB = {
                     count: 2400,
                     rpe: 7,
                     note: 'Long distance run',
-                    date: twoDaysAgo.toISOString().split('T')[0],
-                    time: '07:00:00',
+                    dateTime: twoDaysAgo.toISOString(),
                     weight: undefined,
                     unit: 'lbs'
                 },
@@ -744,8 +767,7 @@ const ExerciseDB = {
                     count: 15,
                     rpe: 6,
                     note: 'Evening session',
-                    date: twoDaysAgo.toISOString().split('T')[0],
-                    time: '19:30:00',
+                    dateTime: twoDaysAgo.toISOString(),
                     weight: undefined,
                     unit: 'lbs'
                 }
@@ -816,16 +838,14 @@ async function addExerciseRecord(
     count: number,
     rpe: number | null,
     note: string,
-    date?: string,
-    time?: string
+    dateTime?: string
 ): Promise<number> {
     const record = {
         exerciseName,
         count,
         rpe,
         note,
-        date: date || new Date().toISOString().split('T')[0],
-        time: time || new Date().toTimeString().split(' ')[0]
+        dateTime: dateTime || new Date().toISOString(),
     };
 
     const recordId = await ExerciseDB.addRecord(record);

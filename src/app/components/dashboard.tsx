@@ -103,9 +103,7 @@ export default function Dashboard() {
         {activeTab === 'plans' && <PlanList />}
 
         {activeTab === 'settings' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
             <ConfigEdit />
-          </div>
         )}
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Exercise, ExerciseDB } from '../lib/indexdb_handler'
-import { renderTypeBadge } from '../lib/exercise_utils'
+import { getDefaultCountPlaceholder, renderTypeBadge } from '../lib/exercise_utils'
 
 interface ExerciseFormProps {
   exercise?: Exercise
@@ -13,13 +13,13 @@ interface ExerciseFormProps {
 
 export default function ExerciseForm({ exercise, onComplete, onCancel, onDelete }: ExerciseFormProps) {
   const [name, setName] = useState(exercise?.name || '')
-  const [type, setType] = useState<'strength' | 'cardio' | 'core'>(exercise?.type || 'strength')
+  const [type, setType] = useState<'weight' | 'timed' | 'count'>(exercise?.type || 'weight')
   const [defaultCount, setDefaultCount] = useState(exercise?.defaultCount || '')
   const [instruction, setInstruction] = useState(exercise?.instruction || '')
   const [error, setError] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const typeOptions: Array<'strength' | 'cardio' | 'core'> = ['strength', 'cardio', 'core']
+  const typeOptions: Array<'weight' | 'timed' | 'count'> = ['weight', 'timed', 'count']
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,6 +27,21 @@ export default function ExerciseForm({ exercise, onComplete, onCancel, onDelete 
 
     if (!name || !type || !defaultCount) {
       setError('Please fill in all required fields')
+      return
+    }
+
+    if (type === 'weight' && !defaultCount.match(/^\d+s\d+r$/)) {
+      setError('Invalid weight format. Please enter a valid number of sets and reps (e.g., 3s12r)')
+      return
+    }
+
+    if (type === 'timed' && !defaultCount.match(/^\d+$/)) {
+      setError('Invalid timed format. Please enter a valid number of seconds (e.g., 60)')
+      return
+    }
+
+    if (type === 'count' && !defaultCount.match(/^\d+$/)) {
+      setError('Invalid count format. Please enter a valid number of reps (e.g., 10)')
       return
     }
 
@@ -78,6 +93,11 @@ export default function ExerciseForm({ exercise, onComplete, onCancel, onDelete 
     }
   }
 
+  const handleSetType = (type: Exercise['type']) => {
+    setType(type)
+    setDefaultCount("")
+  }
+
   return (
     <div className="fixed inset-0 bg-gray-600/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -122,7 +142,7 @@ export default function ExerciseForm({ exercise, onComplete, onCancel, onDelete 
                 <button
                   key={option}
                   type="button"
-                  onClick={() => setType(option)}
+                  onClick={() => handleSetType(option)}
                   className={`flex-1 p-2 rounded-md border transition-colors ${
                     type === option
                       ? 'border-blue-500 bg-blue-50'
@@ -139,18 +159,56 @@ export default function ExerciseForm({ exercise, onComplete, onCancel, onDelete 
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Default Count
             </label>
-            <input
-              type="text"
-              value={defaultCount}
-              onChange={(e) => setDefaultCount(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={type === 'strength' ? 'e.g., 3s12r' : 'e.g., 60'}
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              {type === 'strength' ? 'Format: [sets]s[reps]r (e.g., 3s12r)' : 
-               type === 'cardio' ? 'Time in seconds' : 
-               'Duration in seconds'}
-            </p>
+            {type === 'weight' ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label htmlFor="sets" className="block text-sm text-gray-600 mb-1">Sets</label>
+                    <input
+                      type="number"
+                      id="sets"
+                      value={defaultCount.split('s')[0] || ''}
+                      onChange={(e) => {
+                        const reps = defaultCount.split('s')[1]?.split('r')[0] || '';
+                        setDefaultCount(`${e.target.value}s${reps}r`);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., 3"
+                      min="1"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="reps" className="block text-sm text-gray-600 mb-1">Reps</label>
+                    <input
+                      type="number"
+                      id="reps"
+                      value={defaultCount.split('s')[1]?.split('r')[0] || ''}
+                      onChange={(e) => {
+                        const sets = defaultCount.split('s')[0] || '';
+                        setDefaultCount(`${sets}s${e.target.value}r`);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., 12"
+                      min="1"
+                    />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">Enter the default number of sets and reps</p>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={defaultCount}
+                  onChange={(e) => setDefaultCount(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={type === 'timed' ? 'e.g., 60' : 'Number of reps'}
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  {type === 'timed' ? 'Time in seconds' : 'Number of reps'}
+                </p>
+              </>
+            )}
           </div>
 
           <div>

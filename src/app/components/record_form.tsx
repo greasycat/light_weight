@@ -75,12 +75,12 @@ export default function RecordForm({
   const handleExerciseSelect = (exercise: Exercise) => {
     setSelectedExercise(exercise)
     
-    if (exercise.type !== 'strength') {
+    if (exercise.type !== 'weight') {
       setWeight('')
     }
     
     if (!record) { // Only set default count for new records
-      if (exercise.type === 'strength') {
+      if (exercise.type === 'weight') {
         const match = exercise.defaultCount.match(/(\d+)s(\d+)r/)
         if (match) {
           const [, , reps] = match
@@ -253,7 +253,7 @@ export default function RecordForm({
               
               {selectedExercise && (
                 <>
-                  {selectedExercise.type === 'strength' && (
+                  {selectedExercise.type === 'weight' && (
                     <div className="mb-4">
                       <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
                         Weight
@@ -282,7 +282,7 @@ export default function RecordForm({
 
                   <div className="mb-4">
                     <label htmlFor="count" className="block text-sm font-medium text-gray-700 mb-1">
-                      {selectedExercise.type === 'strength' ? 'Total Reps' : 'Duration (seconds)'}
+                      {selectedExercise.type === 'weight' ? 'Total Reps' : 'Duration (seconds)'}
                     </label>
                     <input
                       type="number"

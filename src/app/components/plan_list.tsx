@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { Plan, ExerciseDB } from '../lib/indexdb_handler'
+import PlanForm from './plan_form'
 
 export default function PlanList() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [, setEditingPlan] = useState<Plan | null>(null)
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
   const [pressedPlan, setPressedPlan] = useState<Plan | null>(null)
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const [, setIsLongPressing] = useState(false)
-  const [, setShowForm] = useState(false)
+  const [isLongPressing, setIsLongPressing] = useState(false)
+  const [showForm, setShowForm] = useState(false)
 
   const loadPlans = async () => {
     try {
@@ -74,17 +75,17 @@ export default function PlanList() {
     setPressedPlan(null)
   }
 
-  // const handlePlanComplete = async () => {
-  //   await loadPlans()
-  //   setEditingPlan(null)
-  //   setShowForm(false)
-  // }
+  const handlePlanComplete = async () => {
+    await loadPlans()
+    setEditingPlan(null)
+    setShowForm(false)
+  }
 
-  // const handlePlanDelete = async () => {
-  //   await loadPlans()
-  //   setEditingPlan(null)
-  //   setShowForm(false)
-  // }
+  const handlePlanDelete = async () => {
+    await loadPlans()
+    setEditingPlan(null)
+    setShowForm(false)
+  }
 
   const formatSchedule = (schedule: string): string => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -148,13 +149,16 @@ export default function PlanList() {
                   <span className="text-sm text-gray-500">{formatSchedule(plan.schedule)}</span>
                 </div>
                 <div className="text-sm text-gray-600">
-                  {plan.exercises.map((exercise, index) => (
-                    <span key={exercise.name} className="inline-block">
-                      {exercise.name}
-                      {exercise.count > 0 && ` (${exercise.count})`}
-                      {index < plan.exercises.length - 1 ? ', ' : ''}
-                    </span>
-                  ))}
+                  {Array.from(new Set(plan.exercises.map(exercise => exercise.name))).map((exerciseName, index) => {
+                    const exercise = plan.exercises.find(ex => ex.name === exerciseName);
+                    return (
+                      <span key={exerciseName} className="inline-block">
+                        {exerciseName}
+                        {exercise?.count && exercise.count > 0 && ` (${exercise.count})`}
+                        {index < plan.exercises.length - 1 ? ', ' : ''}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -162,14 +166,17 @@ export default function PlanList() {
         </div>
       )}
 
-      {/* {showForm && (
+      {showForm && (
         <PlanForm
           plan={editingPlan || undefined}
           onComplete={handlePlanComplete}
-          onCancel={() => setShowForm(false)}
+          onCancel={() => {
+            setShowForm(false)
+            setEditingPlan(null)
+          }}
           onDelete={handlePlanDelete}
         />
-      )} */}
+      )}
     </div>
   )
 } 

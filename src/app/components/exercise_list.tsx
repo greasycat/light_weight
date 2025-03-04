@@ -101,7 +101,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
     const { type, defaultCount } = exercise;
 
     switch (type) {
-      case 'strength': {
+      case 'weight': {
         const match = defaultCount.match(/(\d+)s(\d+)r/);
         if (match) {
           const [, sets, reps] = match;
@@ -114,7 +114,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
         }
         return defaultCount;
       }
-      case 'cardio': {
+      case 'timed': {
         const seconds = parseInt(defaultCount);
         if (!isNaN(seconds)) {
           const minutes = Math.floor(seconds / 60);
@@ -130,7 +130,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
         }
         return defaultCount;
       }
-      case 'core': {
+      case 'count': {
         const seconds = parseInt(defaultCount);
         if (!isNaN(seconds)) {
           return (

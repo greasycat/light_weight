@@ -32,6 +32,10 @@ export default function ConfigEdit() {
   }
 
   const handleClearRecords = async () => {
+    if (!window.confirm('Are you sure you want to delete all records? This cannot be undone.')) {
+      return
+    }
+
     try {
       setLoading(true)
       await ExerciseDB.clearAllRecords()
@@ -54,6 +58,9 @@ export default function ConfigEdit() {
   }
 
   const handleClearExercises = async () => {
+    if (!window.confirm('Are you sure you want to delete all exercises? This cannot be undone.')) {
+      return
+    }
     try {
       setLoading(true)
       await ExerciseDB.clearAllExercises()
@@ -96,10 +103,27 @@ export default function ConfigEdit() {
     }
   }
 
+  const handleRemoveAllData = async () => {
+    if (!window.confirm('Are you sure you want to remove all data? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await ExerciseDB.removeAllData();
+      setMessage({ text: 'All data removed successfully!', type: 'success' });
+    } catch (error) {
+      setMessage({ text: 'Failed to remove all data', type: 'error' });
+      console.error('Error removing all data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!loaded) return null
 
   return (
-    <div className="h-screen w-full flex flex-col bg-white rounded-lg shadow-lg p-6">
+    <div className="h-screen w-full flex flex-col bg-white rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Settings</h2>
         <div className="flex items-center">
@@ -182,7 +206,15 @@ export default function ConfigEdit() {
             </button>
           </div>
 
-          <div className="space-y-8">
+          
+
+          {showPanel && (
+            <div className="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-200">
+              <h4 className="text-md font-medium mb-3">Advanced Settings</h4>
+              <p className="text-xs text-gray-500">
+                Additional configuration options will be available here in future updates.
+              </p>
+           <div className="space-y-8">
             <div>
               <h2 className="text-lg font-medium text-gray-900 mb-4">Record Management</h2>
               <div className="flex space-x-4">
@@ -227,34 +259,33 @@ export default function ConfigEdit() {
               <h2 className="text-lg font-medium text-gray-900 mb-4">Sample Data</h2>
               <div className="flex space-x-4">
                 <button
-                  onClick={handlePopulateSamplePlans}
-                  disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md 
-                    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Adding...' : 'Add Sample Plans'}
-                </button>
-                <button
                   onClick={handleClearAllPlans}
                   disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md 
-                    hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 
-                    disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
                 >
                   {isLoading ? 'Deleting...' : 'Delete All Plans'}
                 </button>
+                <button
+                  onClick={handlePopulateSamplePlans}
+                  disabled={isLoading}
+                  className="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                >
+                  {isLoading ? 'Adding...' : 'Add Sample Plans'}
+                </button>
               </div>
             </div>
-          </div>
 
-          {showPanel && (
-            <div className="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-200">
-              <h4 className="text-md font-medium mb-3">Advanced Settings</h4>
-              <p className="text-xs text-gray-500">
-                Additional configuration options will be available here in future updates.
-              </p>
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Data Management</h2>
+              <button
+                onClick={handleRemoveAllData}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+              >
+                Remove All Data
+              </button>
             </div>
+          </div> </div>
           )}
         </div>
       </div>
