@@ -21,7 +21,7 @@ interface PlanExercise {
     id: number;
     name: string;
     type: string;
-    count: number; // -1 means use default
+    count: string; // -1 means use default
 }
 
 interface Plan {
@@ -33,7 +33,7 @@ interface Plan {
     updatedAt?: string;
 }
 
-interface stats {
+interface Stats {
     totalWorkouts: number;
     averageCount: number;
     maxCount: number;
@@ -46,7 +46,7 @@ interface stats {
 
 interface ExerciseStats {
     exerciseName: string;
-    stats: stats | null;
+    stats: Stats | null;
 }
 
 interface ExerciseWithStats extends Exercise {
@@ -450,9 +450,9 @@ const ExerciseDB = {
             {
                 name: 'Strength Training',
                 exercises: [
-                    { name: 'Push-ups', count: -1, type: 'weight', id: 0 },
-                    { name: 'Pull-ups', count: -1, type: 'weight', id: 1 },
-                    { name: 'Squats', count: -1, type: 'weight', id: 2 },
+                    { name: 'Push-ups', count: '10', type: 'weight', id: 0 },
+                    { name: 'Pull-ups', count: '10', type: 'weight', id: 1 },
+                    { name: 'Squats', count: '10', type: 'weight', id: 2 },
                 ],
                 schedule: '1010100', // Mon, Wed, Fri
                 createdAt: new Date().toISOString(),
@@ -460,8 +460,8 @@ const ExerciseDB = {
             {
                 name: 'Cardio Days',
                 exercises: [
-                    { name: 'Running', count: 1800, type: 'timed', id: 0 }, // 30 minutes
-                    { name: 'Jumping Jacks', count: 100, type: 'timed', id: 1 },
+                    { name: 'Running', count: '1800', type: 'timed', id: 0 }, // 30 minutes
+                    { name: 'Jumping Jacks', count: '100', type: 'timed', id: 1 },
                 ],
                 schedule: '0101010', // Tue, Thu, Sat
                 createdAt: new Date().toISOString(),
@@ -469,9 +469,9 @@ const ExerciseDB = {
             {
                 name: 'Core Workout',
                 exercises: [
-                    { name: 'Planks', count: 60, type: 'count', id: 0 },
-                    { name: 'Crunches', count: 50, type: 'count', id: 1 },
-                    { name: 'Russian Twists', count: 30, type: 'count', id: 2 },
+                    { name: 'Planks', count: '60', type: 'count', id: 0 },
+                    { name: 'Crunches', count: '50', type: 'count', id: 1 },
+                    { name: 'Russian Twists', count: '30', type: 'count', id: 2 },
                 ],
                 schedule: '1111100', // Mon-Fri
                 createdAt: new Date().toISOString(),
@@ -563,9 +563,9 @@ const ExerciseDB = {
         const basicPlan = {
             name: 'Basic Fitness',
             exercises: [
-                { name: 'Push-ups', count: -1, type: 'weight', id: 0 },
-                { name: 'Jumping Jacks', count: 50, type: 'timed', id: 1 },
-                { name: 'Squats', count: -1, type: 'weight', id: 2 }
+                { name: 'Push-ups', count: '10', type: 'weight', id: 0 },
+                { name: 'Jumping Jacks', count: '50', type: 'timed', id: 1 },
+                { name: 'Squats', count: '10', type: 'weight', id: 2 }
             ],
             schedule: '1010100' // Monday, Wednesday, Friday
         };
@@ -573,8 +573,8 @@ const ExerciseDB = {
         const cardioFocus = {
             name: 'Cardio Focus',
             exercises: [
-                { name: 'Jumping Jacks', count: 100, type: 'timed', id: 0 },
-                { name: 'Plank', count: 30, type: 'count', id: 1 }
+                { name: 'Jumping Jacks', count: '100', type: 'timed', id: 0 },
+                { name: 'Plank', count: '30', type: 'count', id: 1 }
             ],
             schedule: '0101010' // Tuesday, Thursday, Saturday
         };
@@ -582,10 +582,10 @@ const ExerciseDB = {
         const weekendWarrior = {
             name: 'Weekend Warrior',
             exercises: [
-                { name: 'Push-ups', count: 20, type: 'weight', id: 0 },
-                { name: 'Squats', count: 25, type: 'weight', id: 1 },
-                { name: 'Plank', count: 60, type: 'count', id: 2 },
-                { name: 'Lunges', count: 30, type: 'weight', id: 3 }
+                { name: 'Push-ups', count: '20', type: 'weight', id: 0 },
+                { name: 'Squats', count: '25', type: 'weight', id: 1 },
+                { name: 'Plank', count: '60', type: 'count', id: 2 },
+                { name: 'Lunges', count: '30', type: 'weight', id: 3 }
             ],
             schedule: '0000011' // Saturday, Sunday
         };
@@ -894,4 +894,4 @@ export {
     getExerciseProgress,
 };
 
-export type { Exercise, ExerciseRecord, Plan, stats, ExerciseStats, ExerciseWithStats };
+export type { Exercise, ExerciseRecord, Plan, PlanExercise, Stats as stats, ExerciseStats, ExerciseWithStats };

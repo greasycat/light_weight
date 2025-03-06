@@ -33,6 +33,31 @@ export function getDefaultCountDescription(type: Exercise['type']): string {
   }
 }
 
+export function getExerciseCount(type: Exercise['type'], count: string): string {
+  switch (type) {
+    case 'weight':
+      const match = count.match(/(\d+)s(\d+)r/);
+      if (match) {
+        const [, sets, reps] = match;
+        return `${sets} sets × ${reps} reps`;
+      }
+      return count;
+    case 'timed':
+      const seconds = parseInt(count);
+      if (!isNaN(seconds)) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        if (minutes > 0) {
+          return `${minutes}min${remainingSeconds > 0 ? ` ${remainingSeconds}s` : ''}`;
+        }
+        return `${seconds}s`;
+      }
+      return count;
+    case 'count':
+      return `${count} reps`;
+  }
+}
+
 export function formatDefaultCount(type: Exercise['type'], count: string): string {
   switch (type) {
     case 'weight': {

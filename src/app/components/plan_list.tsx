@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plan, ExerciseDB } from '../lib/indexdb_handler'
+import { Plan, ExerciseDB, Exercise } from '../lib/indexdb_handler'
 import PlanForm from './plan_form'
+import { getExerciseCount } from '../lib/exercise_utils'
 
 export default function PlanList() {
   const [plans, setPlans] = useState<Plan[]>([])
@@ -153,9 +154,8 @@ export default function PlanList() {
                     const exercise = plan.exercises.find(ex => ex.name === exerciseName);
                     return (
                       <span key={exerciseName} className="inline-block">
-                        {exerciseName}
-                        {exercise?.count && exercise.count > 0 && ` (${exercise.count})`}
-                        {index < plan.exercises.length - 1 ? ', ' : ''}
+                        <span className='font-bold'>{exerciseName}</span>
+                        <span className='text-gray-500 px-2'>{getExerciseCount(exercise?.type as Exercise['type'], exercise?.count as string)}</span>
                       </span>
                     );
                   })}

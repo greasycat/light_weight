@@ -43,25 +43,20 @@ export default function WeekTracker() {
             {weekDates.map((day, index) => (
                 <div
                     key={index}
-                    className={`
-            relative w-12 h-12 flex flex-col items-center justify-center rounded-lg shadow-sm
-            ${day.isToday
-                            ? 'bg-gray-400 text-black'
-                            : 'bg-gray-50 text-gray-600'
-                        }
-          `}
+                    className={`relative w-12 h-12 flex flex-col items-center justify-center rounded-lg shadow-sm select-none bg-gray-50 text-gray-500
+                        ${day.isToday && 'ring-2 ring-black-500'}`}
                 >
                     <div className="relative">
                         {!day.hasRecords && (
                             <>
-                                <span className="text-xs font-bold">{day.dayName}</span>
-                                <span className="text-sm block text-center">{day.dayNumber}</span>
+                                <span className="text-xs font-bold select-none">{day.dayName}</span>
+                                <span className="text-sm block text-center select-none">{day.dayNumber}</span>
                             </>
                         )}
                         {day.hasRecords && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-3xl font-extrabold text-black transform scale-110">X</span>
-                            </div>
+                            <svg viewBox="0 0 24 24" fill="none" className={`w-5 h-5 text-black-500 hover:bg-neutral-100`} stroke='currentColor' strokeWidth="3">
+                                <path d="M20 6L9 17L4 12"/>
+                            </svg>
                         )}
                     </div>
                 </div>
