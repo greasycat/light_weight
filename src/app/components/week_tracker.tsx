@@ -54,7 +54,7 @@ export default function WeekTracker() {
                             </>
                         )}
                         {day.hasRecords && (
-                            <svg viewBox="0 0 24 24" fill="none" className={`w-5 h-5 text-black-500 hover:bg-neutral-100`} stroke='currentColor' strokeWidth="3">
+                            <svg viewBox="0 0 24 24" fill="none" className={`w-5 h-5 text-black-500`} stroke='currentColor' strokeWidth="3">
                                 <path d="M20 6L9 17L4 12"/>
                             </svg>
                         )}
