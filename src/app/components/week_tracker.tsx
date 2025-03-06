@@ -43,8 +43,8 @@ export default function WeekTracker() {
             {weekDates.map((day, index) => (
                 <div
                     key={index}
-                    className={`relative w-12 h-12 flex flex-col items-center justify-center rounded-lg shadow-sm select-none bg-gray-50 text-gray-500
-                        ${day.isToday && 'ring-2 ring-black-500'}`}
+                    className={`relative w-12 h-12 flex flex-col items-center justify-center rounded-lg shadow-sm select-none 
+                        ${!day.isToday ? 'bg-gray-50 text-gray-500' : 'bg-black text-white'}`}
                 >
                     <div className="relative">
                         {!day.hasRecords && (

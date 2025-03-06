@@ -5,6 +5,7 @@ import { format, addDays, subDays, parseISO, startOfDay, endOfDay } from 'date-f
 import { ExerciseDB, ExerciseRecord } from '../lib/indexdb_handler'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import RecordForm from './record_form'
+import DateSelector from './date_selector'
 
 interface RecordListProps {
   dash?: boolean;
@@ -134,8 +135,13 @@ export default function RecordList({ dash = false }: RecordListProps) {
     <>
       {!dash && (
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+            <DateSelector
+              selectedDate={selectedDate}
+              handlePreviousDay={handlePreviousDay}
+              handleNextDay={handleNextDay}
+              handleDateChange={handleDateChange}
+            />
+            {/* <div className="flex items-center space-x-2">
               <button
                 onClick={handlePreviousDay}
                 className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -163,8 +169,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
                   }`} 
                 />
               </button>
-            </div>
-          </div>
+            </div> */}
           <button
             onClick={() => {
                 setEditingRecord(null)

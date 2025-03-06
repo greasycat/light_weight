@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react'
 import { Exercise, ExerciseRecord, ExerciseDB } from '../lib/indexdb_handler'
 import { filterExercises, SearchInput } from '../lib/search_utils'
 import { renderTypeBadge, formatDefaultCount } from '../lib/exercise_utils'
+import { addDays, addHours, subDays, subHours, format, isSameDay, isBefore, set } from 'date-fns'
+import DateSelector from './date_selector'
+import TimeSelector from './time_selector'
 
 interface RecordFormProps {
   record?: ExerciseRecord
@@ -18,6 +21,8 @@ export default function RecordForm({
   onCancel,
   onDelete
 }: RecordFormProps) {
+  const [loading, setLoading] = useState(false)
+  const [dateTime, setDateTime] = useState<Date>(new Date())
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -25,7 +30,6 @@ export default function RecordForm({
   const [count, setCount] = useState('')
   const [rpe, setRpe] = useState('')
   const [note, setNote] = useState('')
-  const [loading, setLoading] = useState(false)
   const [weight, setWeight] = useState('')
   const [unit, setUnit] = useState<'kg' | 'lbs'>('lbs')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -40,7 +44,9 @@ export default function RecordForm({
       setNote(record.note || '')
       setWeight(record.weight?.toString() || '')
       setUnit(record.unit || 'lbs')
+      setDateTime(new Date(record.dateTime))
     }
+    console.log(dateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
   }, [record])
 
   // Find and set the selected exercise when editing
@@ -109,8 +115,7 @@ export default function RecordForm({
         count: countValue,
         rpe: rpeValue,
         note,
-        date: record?.date || new Date().toISOString().split('T')[0],
-        time: record?.time || new Date().toTimeString().split(' ')[0],
+        dateTime: dateTime.toISOString(),
         weight: weightValue,
         unit: unit
       }
@@ -159,6 +164,55 @@ export default function RecordForm({
     }
   }
 
+  const handlePreviousDay = () => {
+    setDateTime(subDays(dateTime, 1))
+  }
+
+  const handleNextDay = () => {
+    setDateTime(addDays(dateTime, 1))
+  }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // check if the date is empty after stripping whitespace
+    if (e.target.value.trim() === '') {
+      setDateTime(new Date())
+    } else {
+      console.log("date change", e.target.value)
+      const [year, month, day] = e.target.value.split('-').map(Number);
+      setDateTime(set(dateTime, { year, month: month - 1, date: day }))
+      console.log("new date time", dateTime)
+    }
+  }
+
+  const handlePreviousTime = () => {
+    setDateTime(subHours(dateTime, 1))
+  }
+
+  const handleNextTime = () => {
+    const newDateTime = addHours(dateTime, 1)
+    // check if the new date time is tomorrow
+    if (isSameDay(newDateTime, new Date()) || isBefore(newDateTime, new Date())) {
+      setDateTime(newDateTime)
+    } else {
+      setDateTime(new Date())
+    }
+  }
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // check if the time is empty after stripping whitespace
+    console.log("time change", e.target.value)
+    if (e.target.value.trim() === '') {
+      setDateTime(new Date())
+    } else {
+      const [hours, minutes] = e.target.value.split(':').map(Number)
+      setDateTime(set(dateTime, { hours, minutes, seconds: 0, milliseconds: 0 }))
+    }
+  }
+
+  const dateTimeToTimeString = (dateTime: Date) => {
+    return format(dateTime, 'HH:mm')
+  }
+
   const resetForm = () => {
     setSelectedExercise(null)
     setCount('')
@@ -198,7 +252,23 @@ export default function RecordForm({
             
             <form onSubmit={handleSubmit}>
               {/* Exercise Selection */}
-              <div className="mb-4">
+              <div className="mb-4 items-center">
+                <div className="flex items-center">
+                  <div className="mb-2 flex flex-col items-center sm:flex-row">
+                    <DateSelector
+                      selectedDate={dateTime}
+                      handlePreviousDay={handlePreviousDay}
+                      handleNextDay={handleNextDay}
+                      handleDateChange={handleDateChange}
+                    />
+                    <TimeSelector
+                      selectedTime={dateTimeToTimeString(dateTime)}
+                      handlePreviousTime={handlePreviousTime}
+                      handleNextTime={handleNextTime}
+                      handleTimeChange={handleTimeChange}
+                    />
+                  </div>
+                </div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Choose Exercise
                 </label>
