@@ -24,7 +24,7 @@ import {
 } from '@dnd-kit/sortable';
 
 import { CSS } from '@dnd-kit/utilities';
-import NumberInput from './number_input';
+import {NumberInput} from './number_input';
 
 interface PlanFormProps {
     plan?: Plan;
@@ -60,6 +60,7 @@ const parseTimedCount = (count: string) => {
     try {
         return parseInt(count);
     } catch (err) {
+        console.error('Error parsing timed count:', err);
         return 60;
     }
 }
@@ -68,6 +69,7 @@ const parseCount = (count: string) => {
     try {
         return parseInt(count);
     } catch (err) {
+        console.error('Error parsing count:', err);
         return 12;
     }
 }
@@ -100,6 +102,7 @@ const incrementCountReps = (count: string, num: number) => {
         if (newReps < 1) newReps = 1;
         return newReps.toString();
     } catch (err) {
+        console.log('Error incrementing count reps:', err);
         return '1';
     }
 }
@@ -110,6 +113,7 @@ const incrementTimedCount = (count: string, num: number) => {
         if (newSeconds < 15) newSeconds = 15;
         return newSeconds.toString();
     } catch (err) {
+        console.log('Error incrementing timed count:', err);
         return '15';
     }
 }

@@ -12,7 +12,7 @@ export default function PlanList() {
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
   const [pressedPlan, setPressedPlan] = useState<Plan | null>(null)
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const [isLongPressing, setIsLongPressing] = useState(false)
+  const [, setIsLongPressing] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
   const loadPlans = async () => {
@@ -150,7 +150,7 @@ export default function PlanList() {
                   <span className="text-sm text-gray-500">{formatSchedule(plan.schedule)}</span>
                 </div>
                 <div className="text-sm text-gray-600">
-                  {Array.from(new Set(plan.exercises.map(exercise => exercise.name))).map((exerciseName, index) => {
+                  {Array.from(new Set(plan.exercises.map(exercise => exercise.name))).map((exerciseName,) => {
                     const exercise = plan.exercises.find(ex => ex.name === exerciseName);
                     return (
                       <span key={exerciseName} className="inline-block">

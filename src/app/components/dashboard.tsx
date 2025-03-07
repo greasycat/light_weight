@@ -1,50 +1,46 @@
-'use client'
-import { useState } from 'react'
+"use client";
+import { useState } from "react";
 
-import ConfigEdit from './config_edit'
-import ExerciseList from './exercise_list'
-import RecordList from './record_list'
-import WeekTracker from './week_tracker'
-import PlanList from './plan_list'
-import WorkoutBuilder from './workout_builder'
+import ConfigEdit from "./config_edit";
+import ExerciseList from "./exercise_list";
+import RecordList from "./record_list";
+import WeekTracker from "./week_tracker";
+import PlanList from "./plan_list";
+import WorkoutBuilder from "./workout_builder";
 
-type TabType = 'dashboard' | 'exercises' | 'records' | 'plans' | 'settings';
+type TabType = "dashboard" | "exercises" | "records" | "plans" | "settings";
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard')
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [showWorkoutBuilder, setShowWorkoutBuilder] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showWorkoutBuilder, setShowWorkoutBuilder] = useState(false);
 
   const tabs = [
-    { id: 'dashboard', name: "Dashboard" },
-    { id: 'exercises', name: 'Exercises' },
-    { id: 'records', name: 'Records' },
-    { id: 'plans', name: 'Plans' },
-    { id: 'settings', name: 'Settings' },
-  ]
+    { id: "dashboard", name: "Dashboard" },
+    { id: "exercises", name: "Exercises" },
+    { id: "records", name: "Records" },
+    { id: "plans", name: "Plans" },
+    { id: "settings", name: "Settings" },
+  ];
 
   // Get the current tab index and calculate visible tabs
-  const currentIndex = tabs.findIndex(tab => tab.id === activeTab)
+  const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
 
   // Calculate the indices for visible tabs with wrapping
-  const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length
-  const nextIndex = (currentIndex + 1) % tabs.length
+  const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+  const nextIndex = (currentIndex + 1) % tabs.length;
 
-  const visibleTabs = [
-    tabs[prevIndex],
-    tabs[currentIndex],
-    tabs[nextIndex]
-  ]
+  const visibleTabs = [tabs[prevIndex], tabs[currentIndex], tabs[nextIndex]];
 
   const handleTabClick = async (tabId: TabType) => {
-    if (isAnimating || tabId === activeTab) return
+    if (isAnimating || tabId === activeTab) return;
 
-    setIsAnimating(true)
+    setIsAnimating(true);
 
-    setActiveTab(tabId)
+    setActiveTab(tabId);
 
-    setIsAnimating(false)
-  }
+    setIsAnimating(false);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl pt-0">
@@ -66,16 +62,18 @@ export default function Dashboard() {
                   className={`
           whitespace-nowrap py-2 px-0 border-b-2 font-medium text-sm
           transition-all duration-300 ease-out
-          ${isActive
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'}
-          ${isAnimating ? 'pointer-events-none' : ''}
+          ${
+            isActive
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300"
+          }
+          ${isAnimating ? "pointer-events-none" : ""}
         `}
                   style={{
                     transform: `scale(${isActive ? 1.1 : 0.9})`,
                     opacity: isActive ? 1 : 0.8,
-                    filter: isActive ? 'none' : 'blur(0.5px)',
-                    transformOrigin: 'center bottom'
+                    filter: isActive ? "none" : "blur(0.5px)",
+                    transformOrigin: "center bottom",
                   }}
                 >
                   {tab.name}
@@ -87,31 +85,42 @@ export default function Dashboard() {
       </div>
 
       {/* Content */}
-      <div className={`transition-opacity duration-300 ${isAnimating ? 'opacity-50' : 'opacity-100'}`}>
+      <div
+        className={`transition-opacity duration-300 ${
+          isAnimating ? "opacity-50" : "opacity-100"
+        }`}
+      >
         {/* Week Tracker */}
-        {activeTab === 'dashboard' && <>
-          <WeekTracker />
-          <button onClick={() => setShowWorkoutBuilder(true)} className='bg-blue-500 text-white px-4 py-2 rounded-md'>Start Workout</button>
-          {showWorkoutBuilder && <WorkoutBuilder onClose={() => setShowWorkoutBuilder(false)} />}
-        </>}
+        {activeTab === "dashboard" && (
+          <>
+            <WeekTracker />
+            <button
+              onClick={() => setShowWorkoutBuilder(true)}
+              className="bg-red-500 text-white shadow-sm px-4 py-2 rounded-md"
+            >
+              Start Workout
+            </button>
+            {showWorkoutBuilder && (
+              <WorkoutBuilder onClose={() => setShowWorkoutBuilder(false)} />
+            )}
+          </>
+        )}
 
         {/* Tab Panels */}
-        {activeTab === 'dashboard' && (
+        {activeTab === "dashboard" && (
           <div>
             <RecordList dash={true} />
           </div>
         )}
 
-        {activeTab === 'exercises' && <ExerciseList />}
+        {activeTab === "exercises" && <ExerciseList />}
 
-        {activeTab === 'records' && <RecordList />}
+        {activeTab === "records" && <RecordList />}
 
-        {activeTab === 'plans' && <PlanList />}
+        {activeTab === "plans" && <PlanList />}
 
-        {activeTab === 'settings' && (
-          <ConfigEdit />
-        )}
+        {activeTab === "settings" && <ConfigEdit />}
       </div>
     </div>
-  )
+  );
 }

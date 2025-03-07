@@ -4,10 +4,18 @@ import { useState, useEffect } from 'react'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { ExerciseDB } from '../lib/indexdb_handler'
 
+type WeekDate = {
+    dayName: string;
+    dayNumber: string;
+    dateStr: string;
+    isToday: boolean;
+    hasRecords: boolean;
+}
+
 export default function WeekTracker() {
     const [datesWithRecords, setDatesWithRecords] = useState<Set<string>>(new Set())
+    const [startOfCurrentWeek, ] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 })) // Start from Monday
     const today = new Date()
-    const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 1 }) // Start from Monday
 
     useEffect(() => {
         const fetchWeekRecords = async () => {
@@ -22,10 +30,10 @@ export default function WeekTracker() {
         }
 
         fetchWeekRecords()
-    }, [])
+    }, [startOfCurrentWeek])
 
     // Generate array of dates for the week
-    const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const getWeekDates = () => { return Array.from({ length: 7 }, (_, i) => {
         const date = addDays(startOfCurrentWeek, i)
         const dateStr = format(date, 'yyyy-MM-dd')
         const todayStr = format(today, 'yyyy-MM-dd')
@@ -36,7 +44,10 @@ export default function WeekTracker() {
             isToday: dateStr === todayStr,
             hasRecords: datesWithRecords.has(dateStr)
         }
-    })
+        })
+    }
+
+    const [weekDates,] = useState<WeekDate[]>(getWeekDates())
 
     return (
         <div className="flex justify-center space-x-2 mb-6">

@@ -47,7 +47,7 @@ export default function RecordForm({
       setDateTime(new Date(record.dateTime))
     }
     console.log(dateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
-  }, [record])
+  }, [record, dateTime])
 
   // Find and set the selected exercise when editing
   useEffect(() => {

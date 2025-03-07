@@ -1,216 +1,228 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { Plan, ExerciseDB, ExerciseRecord } from '../lib/indexdb_handler'
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
-import NumberInput from './number_input'
+import React, { useState, useEffect } from "react";
+import { Plan, ExerciseDB, ExerciseRecord } from "../lib/indexdb_handler";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+  MinusIcon,
+} from "@heroicons/react/24/outline";
+import { NumberInputRep, NumberInputWeight } from "./number_input";
 
 interface WorkoutBuilderProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
 const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
-  const [plans, setPlans] = useState<Plan[]>([])
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0)
-  const [isStarted, setIsStarted] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [isResting, setIsResting] = useState(false)
-  const [restTime, setRestTime] = useState(120) // 2 minutes in seconds
-  const [currentRestTime, setCurrentRestTime] = useState(120)
-  const [isRestTimerRunning, setIsRestTimerRunning] = useState(false)
-  const [restTimerId, setRestTimerId] = useState<NodeJS.Timeout | null>(null)
-  const [exerciseTimerId, setExerciseTimerId] = useState<NodeJS.Timeout | null>(null)
-  const [currentExerciseTime, setCurrentExerciseTime] = useState(0)
-  const [isExerciseTimerRunning, setIsExerciseTimerRunning] = useState(false)
-  const [weight, setWeight] = useState('')
-  const [unit, setUnit] = useState<'kg' | 'lbs'>('lbs')
-  const [reps, setReps] = useState('')
-  const [rpe, setRpe] = useState('')
-  const [note, setNote] = useState('')
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [isStarted, setIsStarted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isResting, setIsResting] = useState(false);
+  const [restTime, setRestTime] = useState(120); // 2 minutes in seconds
+  const [currentRestTime, setCurrentRestTime] = useState(120);
+  const [isRestTimerRunning, setIsRestTimerRunning] = useState(false);
+  const [restTimerId, setRestTimerId] = useState<NodeJS.Timeout | null>(null);
+  const [exerciseTimerId, setExerciseTimerId] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [currentExerciseTime, setCurrentExerciseTime] = useState(0);
+  const [isExerciseTimerRunning, setIsExerciseTimerRunning] = useState(false);
+  const [weight, setWeight] = useState("0");
+  const [unit, setUnit] = useState<"kg" | "lbs">("lbs");
+  const [reps, setReps] = useState("0");
+  const [rpe, setRpe] = useState("0");
+  const [note, setNote] = useState("");
 
   useEffect(() => {
-    loadPlans()
-  }, [])
+    loadPlans();
+  }, []);
 
   useEffect(() => {
     if (isRestTimerRunning) {
       const timer = setInterval(() => {
         setCurrentRestTime((prev) => {
           if (prev <= 1) {
-            clearInterval(timer)
-            setIsRestTimerRunning(false)
-            setIsResting(false)
-            return 0
+            clearInterval(timer);
+            setIsRestTimerRunning(false);
+            setIsResting(false);
+            return 0;
           }
-          return prev - 1
-        })
-      }, 1000)
-      setRestTimerId(timer)
+          return prev - 1;
+        });
+      }, 1000);
+      setRestTimerId(timer);
     }
 
     return () => {
       if (restTimerId) {
-        clearInterval(restTimerId)
+        clearInterval(restTimerId);
       }
-    }
-  }, [isRestTimerRunning])
+    };
+  }, [isRestTimerRunning, restTimerId]);
 
   useEffect(() => {
     if (isExerciseTimerRunning) {
       const timer = setInterval(() => {
-        setCurrentExerciseTime((prev) => prev + 1)
-      }, 1000)
-      setExerciseTimerId(timer)
+        setCurrentExerciseTime((prev) => prev + 1);
+      }, 1000);
+      setExerciseTimerId(timer);
     }
 
     return () => {
       if (exerciseTimerId) {
-        clearInterval(exerciseTimerId)
+        clearInterval(exerciseTimerId);
       }
-    }
-  }, [isExerciseTimerRunning])
+    };
+  }, [exerciseTimerId, isExerciseTimerRunning]);
 
   const loadPlans = async () => {
     try {
-      const allPlans = await ExerciseDB.getAllPlans()
-      setPlans(allPlans)
-      setLoading(false)
+      const allPlans = await ExerciseDB.getAllPlans();
+      setPlans(allPlans);
+      setLoading(false);
     } catch (error) {
-      console.error('Error loading plans:', error)
-      setLoading(false)
+      console.error("Error loading plans:", error);
+      setLoading(false);
     }
-  }
+  };
 
   const handleStart = () => {
-    setIsStarted(true)
-  }
+    setIsStarted(true);
+  };
 
   const handlePreviousExercise = () => {
     if (currentExerciseIndex > 0) {
-      setCurrentExerciseIndex(currentExerciseIndex - 1)
-      setIsResting(false)
-      setCurrentRestTime(restTime)
-      setIsRestTimerRunning(false)
-      resetExerciseState()
+      setCurrentExerciseIndex(currentExerciseIndex - 1);
+      setIsResting(false);
+      setCurrentRestTime(restTime);
+      setIsRestTimerRunning(false);
+      resetExerciseState();
     }
-  }
+  };
 
   const handleNextExercise = () => {
     if (isResting) {
-      setIsResting(false)
-      setCurrentRestTime(restTime)
-      setIsRestTimerRunning(false)
-      return
+      setIsResting(false);
+      setCurrentRestTime(restTime);
+      setIsRestTimerRunning(false);
+      return;
     }
 
-    if (selectedPlan && currentExerciseIndex < selectedPlan.exercises.length - 1) {
-      setCurrentExerciseIndex(currentExerciseIndex + 1)
-      setIsResting(true)
-      setCurrentRestTime(restTime)
-      setIsRestTimerRunning(false)
-      resetExerciseState()
+    if (
+      selectedPlan &&
+      currentExerciseIndex < selectedPlan.exercises.length - 1
+    ) {
+      setCurrentExerciseIndex(currentExerciseIndex + 1);
+      setIsResting(true);
+      setCurrentRestTime(restTime);
+      setIsRestTimerRunning(false);
+      resetExerciseState();
     }
-  }
+  };
 
   const handlePlanSelect = (plan: Plan) => {
-    setSelectedPlan(plan)
-  }
+    setSelectedPlan(plan);
+  };
 
   const handleRestStart = () => {
-    setIsRestTimerRunning(true)
-  }
+    setIsRestTimerRunning(true);
+  };
 
   const handleRestPause = () => {
-    setIsRestTimerRunning(false)
+    setIsRestTimerRunning(false);
     if (restTimerId) {
-      clearInterval(restTimerId)
+      clearInterval(restTimerId);
     }
-  }
+  };
 
   const handleRestReset = () => {
-    setIsRestTimerRunning(false)
-    setCurrentRestTime(restTime)
+    setIsRestTimerRunning(false);
+    setCurrentRestTime(restTime);
     if (restTimerId) {
-      clearInterval(restTimerId)
+      clearInterval(restTimerId);
     }
-  }
+  };
 
   const handleRestTimeAdjust = (seconds: number) => {
-    const newTime = Math.max(0, restTime + seconds)
-    setRestTime(newTime)
+    const newTime = Math.max(0, restTime + seconds);
+    setRestTime(newTime);
     if (!isRestTimerRunning) {
-      setCurrentRestTime(newTime)
+      setCurrentRestTime(newTime);
     }
-  }
+  };
 
   const handleExerciseStart = () => {
-    setIsExerciseTimerRunning(true)
-  }
+    setIsExerciseTimerRunning(true);
+  };
 
   const handleExercisePause = () => {
-    setIsExerciseTimerRunning(false)
+    setIsExerciseTimerRunning(false);
     if (exerciseTimerId) {
-      clearInterval(exerciseTimerId)
+      clearInterval(exerciseTimerId);
     }
-  }
+  };
 
   const handleExerciseReset = () => {
-    setIsExerciseTimerRunning(false)
-    setCurrentExerciseTime(0)
+    setIsExerciseTimerRunning(false);
+    setCurrentExerciseTime(0);
     if (exerciseTimerId) {
-      clearInterval(exerciseTimerId)
+      clearInterval(exerciseTimerId);
     }
-  }
+  };
 
-  const handleRepsAdjust = (increment: number) => {
-    const currentReps = parseInt(reps) || 0
-    setReps(Math.max(0, currentReps + increment).toString())
-  }
+  // const handleRepsAdjust = (increment: number) => {
+  //   const currentReps = parseInt(reps) || 0
+  //   setReps(Math.max(0, currentReps + increment).toString())
+  // }
 
   const handleSaveRecord = async () => {
-    if (!selectedPlan) return
+    if (!selectedPlan) return;
 
-    const currentExercise = selectedPlan.exercises[currentExerciseIndex]
-    const recordData: Omit<ExerciseRecord, 'id'> = {
+    const currentExercise = selectedPlan.exercises[currentExerciseIndex];
+    const recordData: Omit<ExerciseRecord, "id"> = {
       exerciseName: currentExercise.name,
       dateTime: new Date().toISOString(),
-      count: currentExercise.type === 'timed' ? currentExerciseTime : parseInt(reps),
+      count:
+        currentExercise.type === "timed" ? currentExerciseTime : parseInt(reps),
       rpe: rpe ? parseFloat(rpe) : null,
       note,
-      weight: currentExercise.type === 'weight' ? parseFloat(weight) : undefined,
-      unit: currentExercise.type === 'weight' ? unit : undefined
-    }
+      weight:
+        currentExercise.type === "weight" ? parseFloat(weight) : undefined,
+      unit: currentExercise.type === "weight" ? unit : undefined,
+    };
 
     try {
-      await ExerciseDB.addRecord(recordData)
-      resetExerciseState()
-      setIsResting(true)
-      setCurrentRestTime(restTime)
-      setIsRestTimerRunning(false)
+      await ExerciseDB.addRecord(recordData);
+      resetExerciseState();
+      setIsResting(true);
+      setCurrentRestTime(restTime);
+      setIsRestTimerRunning(false);
     } catch (error) {
-      console.error('Error saving record:', error)
+      console.error("Error saving record:", error);
     }
-  }
+  };
 
   const resetExerciseState = () => {
-    setWeight('')
-    setUnit('lbs')
-    setReps('')
-    setRpe('')
-    setNote('')
-    setCurrentExerciseTime(0)
-    setIsExerciseTimerRunning(false)
+    setWeight("");
+    setUnit("lbs");
+    setReps("");
+    setRpe("");
+    setNote("");
+    setCurrentExerciseTime(0);
+    setIsExerciseTimerRunning(false);
     if (exerciseTimerId) {
-      clearInterval(exerciseTimerId)
+      clearInterval(exerciseTimerId);
     }
-  }
+  };
 
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-  }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
 
   if (loading) {
     return (
@@ -219,7 +231,7 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
           <div className="text-center">Loading plans...</div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!isStarted) {
@@ -234,8 +246,8 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
                 onClick={() => handlePlanSelect(plan)}
                 className={`w-full p-4 text-left rounded-lg border ${
                   selectedPlan?.id === plan.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
                 <h3 className="font-medium">{plan.name}</h3>
@@ -262,7 +274,7 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (isResting) {
@@ -280,7 +292,10 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
             <h2 className="text-xl font-semibold text-center">Rest Time</h2>
             <button
               onClick={handleNextExercise}
-              disabled={!selectedPlan || currentExerciseIndex === selectedPlan.exercises.length - 1}
+              disabled={
+                !selectedPlan ||
+                currentExerciseIndex === selectedPlan.exercises.length - 1
+              }
               className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRightIcon className="w-6 h-6" />
@@ -291,7 +306,7 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
             <div className="text-6xl font-bold text-blue-600">
               {formatTime(currentRestTime)}
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => handleRestTimeAdjust(-15)}
@@ -342,10 +357,10 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  const currentExercise = selectedPlan?.exercises[currentExerciseIndex]
+  const currentExercise = selectedPlan?.exercises[currentExerciseIndex];
 
   return (
     <div className="fixed inset-0 bg-gray-600/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -363,44 +378,49 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
           </h2>
           <button
             onClick={handleNextExercise}
-            disabled={!selectedPlan || currentExerciseIndex === selectedPlan.exercises.length - 1}
+            disabled={
+              !selectedPlan ||
+              currentExerciseIndex === selectedPlan.exercises.length - 1
+            }
             className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronRightIcon className="w-6 h-6" />
           </button>
         </div>
-        
-        <div className="text-center mb-8">
-          <p className="text-gray-600">
-            Exercise {currentExerciseIndex + 1} of {selectedPlan?.exercises.length}
-          </p>
-        </div>
 
         <div className="flex flex-col items-center space-y-6">
-          {currentExercise?.type === 'weight' && (
-            <div className="flex items-center space-x-4">
-              <NumberInput
+          {currentExercise?.type === "weight" && (
+            <>
+              <NumberInputWeight 
                 value={parseFloat(weight) || 0}
-                onChange={(e) => setWeight(e.target.value)}
-                onIncrement={() => setWeight((parseFloat(weight) || 0 + 2.5).toString())}
-                onDecrement={() => setWeight(Math.max(0, (parseFloat(weight) || 0 - 2.5)).toString())}
-                arrowColor="text-gray-600"
+                onChange={(val) => setWeight(val.toString())}
                 textColor="text-gray-600"
                 text="Weight"
-                placeholder="0"
+                placeholder={unit}
+                className="w-full max-w-xs"
+                unit={unit}
+                onUnitChange={setUnit}
               />
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value as 'kg' | 'lbs')}
-                className="px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="lbs">lbs</option>
-                <option value="kg">kg</option>
-              </select>
-            </div>
+
+              <NumberInputRep
+                value={parseInt(reps) || 0}
+                onChange={(val) => setReps(val.toString())}
+                textColor="text-gray-600"
+                text="Reps"
+                className="w-full max-w-xs"
+              />
+              <NumberInputRep
+                value={parseInt(reps) || 0}
+                onChange={(val) => setReps(val.toString())}
+                textColor="text-gray-600"
+                text="RPE"
+                className="w-full max-w-xs"
+              />
+
+            </>
           )}
 
-          {currentExercise?.type === 'timed' ? (
+          {currentExercise?.type === "timed" && (
             <>
               <div className="text-6xl font-bold text-blue-600">
                 {formatTime(currentExerciseTime)}
@@ -429,32 +449,10 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
                 </button>
               </div>
             </>
-          ) : (
-            <div className="flex items-center space-x-4">
-              <NumberInput
-                value={parseInt(reps) || 0}
-                onChange={(e) => setReps(e.target.value)}
-                onIncrement={() => setReps((parseInt(reps) || 0 + 1).toString())}
-                onDecrement={() => setReps(Math.max(0, (parseInt(reps) || 0 - 1)).toString())}
-                arrowColor="text-gray-600"
-                textColor="text-gray-600"
-                text="Reps"
-                placeholder="0"
-              />
-            </div>
           )}
 
           <div className="flex flex-col space-y-4 w-full max-w-xs">
-            <NumberInput
-              value={parseFloat(rpe) || 0}
-              onChange={(e) => setRpe(e.target.value)}
-              onIncrement={() => setRpe(Math.min(10, (parseFloat(rpe) || 0 + 0.5)).toString())}
-              onDecrement={() => setRpe(Math.max(1, (parseFloat(rpe) || 0 - 0.5)).toString())}
-              arrowColor="text-gray-600"
-              textColor="text-gray-600"
-              text="RPE"
-              placeholder="1-10"
-            />
+            <p>Number input here</p>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -481,7 +479,7 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default WorkoutBuilder
+export default WorkoutBuilder;

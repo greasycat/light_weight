@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Exercise, ExerciseDB } from '../lib/indexdb_handler'
-import { getDefaultCountPlaceholder, renderTypeBadge } from '../lib/exercise_utils'
+import { renderTypeBadge } from '../lib/exercise_utils'
 
 interface ExerciseFormProps {
   exercise?: Exercise

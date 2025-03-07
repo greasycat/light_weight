@@ -1,147 +1,179 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { format, addDays, subDays, parseISO, startOfDay, endOfDay } from 'date-fns'
-import { ExerciseDB, ExerciseRecord } from '../lib/indexdb_handler'
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import RecordForm from './record_form'
-import DateSelector from './date_selector'
+import { useCallback, useState, useEffect } from "react";
+import {
+  format,
+  addDays,
+  subDays,
+  parseISO,
+  startOfDay,
+  endOfDay,
+} from "date-fns";
+import { ExerciseDB, ExerciseRecord } from "../lib/indexdb_handler";
+// import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import RecordForm from "./record_form";
+import DateSelector from "./date_selector";
 
 interface RecordListProps {
   dash?: boolean;
 }
 
 export default function RecordList({ dash = false }: RecordListProps) {
-  const [records, setRecords] = useState<ExerciseRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const [showForm, setShowForm] = useState(false)
-  const [editingRecord, setEditingRecord] = useState<ExerciseRecord | null>(null)
-  const [pressedRecord, setPressedRecord] = useState<ExerciseRecord | null>(null)
-  const [loadingProgress, setLoadingProgress] = useState(0)
-  const [, setIsLongPressing] = useState(false)
+  const [records, setRecords] = useState<ExerciseRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showForm, setShowForm] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<ExerciseRecord | null>(
+    null
+  );
+  const [pressedRecord, setPressedRecord] = useState<ExerciseRecord | null>(
+    null
+  );
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [, setIsLongPressing] = useState(false);
+
+
+  const loadRecords = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const start = startOfDay(selectedDate);
+      const end = endOfDay(selectedDate);
+
+      const startDate = start.toISOString();
+      const endDate = end.toISOString();
+
+      const records = await ExerciseDB.getRecordsByDateRange(
+        startDate,
+        endDate
+      );
+      const sortedRecords = records.sort(
+        (a, b) =>
+          new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
+      );
+      setRecords(sortedRecords);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching records:", error);
+      setLoading(false);
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
-    loadRecords()
-  }, [selectedDate])
-
-  const loadRecords = async () => {
-    try {
-      setLoading(true)
-      
-      const start = startOfDay(selectedDate)
-      const end = endOfDay(selectedDate)
-      
-      const startDate = start.toISOString()
-      const endDate = end.toISOString()
-      
-      const records = await ExerciseDB.getRecordsByDateRange(startDate, endDate)
-      const sortedRecords = records.sort((a, b) => 
-        new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
-      )
-      setRecords(sortedRecords)
-      setLoading(false)
-    } catch (error) {
-      console.error('Error fetching records:', error)
-      setLoading(false)
-    }
-  }
+    loadRecords();
+  }, [loadRecords]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = parseISO(e.target.value)
-    setSelectedDate(newDate)
-  }
+    const newDate = parseISO(e.target.value);
+    setSelectedDate(newDate);
+  };
 
   const handlePreviousDay = () => {
-    const prevDate = subDays(selectedDate, 1)
-    setSelectedDate(prevDate)
-  }
+    const prevDate = subDays(selectedDate, 1);
+    setSelectedDate(prevDate);
+  };
 
   const handleNextDay = () => {
-    const nextDate = addDays(selectedDate, 1)
-    setSelectedDate(nextDate)
-  }
+    const nextDate = addDays(selectedDate, 1);
+    setSelectedDate(nextDate);
+  };
 
   const handleRecordComplete = async () => {
-    await loadRecords()
-    setEditingRecord(null)
-    setShowForm(false)
-  }
+    await loadRecords();
+    setEditingRecord(null);
+    setShowForm(false);
+  };
 
   const handleRecordDelete = async () => {
-    await loadRecords()
-    setEditingRecord(null)
-    setShowForm(false)
-  }
+    await loadRecords();
+    setEditingRecord(null);
+    setShowForm(false);
+  };
 
   useEffect(() => {
     if (pressedRecord) {
-      setIsLongPressing(true)
-      setLoadingProgress(0)
-      
+      setIsLongPressing(true);
+      setLoadingProgress(0);
+
       const interval = setInterval(() => {
-        setLoadingProgress(prev => {
+        setLoadingProgress((prev) => {
           if (prev >= 100) {
-            setEditingRecord(pressedRecord)
-            clearInterval(interval)
-            return 100
+            setEditingRecord(pressedRecord);
+            clearInterval(interval);
+            return 100;
           }
-          return prev + 10
-        })
-      }, 50)
-      
-      return () => clearInterval(interval)
+          return prev + 10;
+        });
+      }, 50);
+
+      return () => clearInterval(interval);
     } else {
-      setIsLongPressing(false)
-      setLoadingProgress(0)
+      setIsLongPressing(false);
+      setLoadingProgress(0);
     }
-  }, [pressedRecord])
+  }, [pressedRecord]);
 
   const loadingBarStyle = (record: ExerciseRecord): React.CSSProperties => ({
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
-    height: '100%',
+    height: "100%",
     width: `${pressedRecord?.id === record.id ? loadingProgress : 0}%`,
-    backgroundColor: 'rgba(133, 133, 133, 0.25)',
-    transition: 'width 0.05s linear',
+    backgroundColor: "rgba(133, 133, 133, 0.25)",
+    transition: "width 0.05s linear",
     zIndex: 0,
-  })
-  
+  });
+
   const handleMouseDown = (record: ExerciseRecord) => {
-    setPressedRecord(record)
-  }
-  
+    setPressedRecord(record);
+  };
+
   const handleMouseUp = () => {
-    setPressedRecord(null)
-  }
+    setPressedRecord(null);
+  };
 
   if (loading) {
     return (
       <div className="w-full max-w-4xl mx-auto p-4">
         <div className="flex justify-center py-8">
-          <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <svg
+            className="animate-spin h-8 w-8 text-blue-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
         </div>
       </div>
-    )
+    );
   }
 
-  const displayRecords = dash ? records.slice(0, 5) : records
+  const displayRecords = dash ? records.slice(0, 5) : records;
 
   const content = (
     <>
       {!dash && (
         <div className="flex items-center justify-between mb-6">
-            <DateSelector
-              selectedDate={selectedDate}
-              handlePreviousDay={handlePreviousDay}
-              handleNextDay={handleNextDay}
-              handleDateChange={handleDateChange}
-            />
-            {/* <div className="flex items-center space-x-2">
+          <DateSelector
+            selectedDate={selectedDate}
+            handlePreviousDay={handlePreviousDay}
+            handleNextDay={handleNextDay}
+            handleDateChange={handleDateChange}
+          />
+          {/* <div className="flex items-center space-x-2">
               <button
                 onClick={handlePreviousDay}
                 className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -172,8 +204,8 @@ export default function RecordList({ dash = false }: RecordListProps) {
             </div> */}
           <button
             onClick={() => {
-                setEditingRecord(null)
-                setShowForm(true)
+              setEditingRecord(null);
+              setShowForm(true);
             }}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -182,7 +214,7 @@ export default function RecordList({ dash = false }: RecordListProps) {
           {showForm && (
             <RecordForm
               onComplete={handleRecordComplete}
-              onCancel={()=>setShowForm(false)}
+              onCancel={() => setShowForm(false)}
             />
           )}
         </div>
@@ -198,12 +230,13 @@ export default function RecordList({ dash = false }: RecordListProps) {
 
       {records.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No workouts recorded {!dash && `on ${format(selectedDate, 'MMM d, yyyy')}`}
+          No workouts recorded{" "}
+          {!dash && `on ${format(selectedDate, "MMM d, yyyy")}`}
         </div>
       ) : (
         <div className="space-y-2">
           {displayRecords.map((record) => (
-            <div 
+            <div
               key={record.id}
               className="rounded-lg shadow p-4 bg-white hover:bg-gray-50 relative"
               onMouseDown={() => handleMouseDown(record)}
@@ -215,15 +248,18 @@ export default function RecordList({ dash = false }: RecordListProps) {
               <div style={loadingBarStyle(record)}></div>
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center space-x-2">
-                  <span className="font-medium select-none">{record.exerciseName}</span>
+                  <span className="font-medium select-none">
+                    {record.exerciseName}
+                  </span>
                   <span className="text-gray-500 select-none">
-                    {record.count} {record.weight && `@ ${record.weight}${record.unit}`} 
+                    {record.count}{" "}
+                    {record.weight && `@ ${record.weight}${record.unit}`}
                     {record.rpe && ` RPE: ${record.rpe}`}
                     {record.note && ` - ${record.note}`}
                   </span>
                 </div>
                 <span className="text-xs text-gray-500 select-none">
-                  {format(new Date(record.dateTime), 'HH:mm')}
+                  {format(new Date(record.dateTime), "HH:mm")}
                 </span>
               </div>
             </div>
@@ -243,16 +279,8 @@ export default function RecordList({ dash = false }: RecordListProps) {
   );
 
   if (dash) {
-    return (
-      <div className="bg-gray-50 rounded-md shadow-sm p-6">
-        {content}
-      </div>
-    );
+    return <div className="bg-gray-50 rounded-md shadow-sm p-6">{content}</div>;
   }
 
-  return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      {content}
-    </div>
-  );
-} 
+  return <div className="w-full max-w-4xl mx-auto p-4">{content}</div>;
+}
