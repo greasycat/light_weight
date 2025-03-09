@@ -8,7 +8,7 @@ import {
   PlusIcon,
   MinusIcon,
 } from "@heroicons/react/24/outline";
-import { NumberInputRep, NumberInputWeight } from "./number_input";
+import { NumberInputOneLine, NumberInputRep, NumberInputWeight } from "./number_input";
 
 interface WorkoutBuilderProps {
   onClose: () => void;
@@ -18,6 +18,7 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [workoutRecords, setWorkoutRecords] = useState<Record<number, ExerciseRecord[]>>({});
   const [isStarted, setIsStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isResting, setIsResting] = useState(false);
@@ -173,16 +174,11 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
     }
   };
 
-  // const handleRepsAdjust = (increment: number) => {
-  //   const currentReps = parseInt(reps) || 0
-  //   setReps(Math.max(0, currentReps + increment).toString())
-  // }
-
   const handleSaveRecord = async () => {
     if (!selectedPlan) return;
 
     const currentExercise = selectedPlan.exercises[currentExerciseIndex];
-    const recordData: Omit<ExerciseRecord, "id"> = {
+    const recordData: Omit<ExerciseRecord, 'id'> = {
       exerciseName: currentExercise.name,
       dateTime: new Date().toISOString(),
       count:
@@ -195,21 +191,26 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
     };
 
     try {
-      await ExerciseDB.addRecord(recordData);
+      const recordId = await ExerciseDB.addRecord(recordData);
+      // Update workoutRecords state with the new record
+      setWorkoutRecords(prev => ({
+        ...prev,
+        [currentExerciseIndex]: [
+          ...(prev[currentExerciseIndex] || []),
+          { ...recordData, id: recordId }
+        ]
+      }));
       resetExerciseState();
-      setIsResting(true);
-      setCurrentRestTime(restTime);
-      setIsRestTimerRunning(false);
     } catch (error) {
       console.error("Error saving record:", error);
     }
   };
 
   const resetExerciseState = () => {
-    setWeight("");
+    setWeight("0");
     setUnit("lbs");
-    setReps("");
-    setRpe("");
+    setReps("0");
+    setRpe("0");
     setNote("");
     setCurrentExerciseTime(0);
     setIsExerciseTimerRunning(false);
@@ -362,6 +363,11 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
 
   const currentExercise = selectedPlan?.exercises[currentExerciseIndex];
 
+    const divClasses = "flex flex-row items-center justify-center";
+    const inputClasses = "w-10 remove-arrow text-center font-bold";
+    const iconClasses = "p-2 text-black";
+    const textClasses = "text-neutral-700 text-md font-semibold select-none";
+
   return (
     <div className="fixed inset-0 bg-gray-600/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full h-full">
@@ -388,13 +394,25 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
           </button>
         </div>
 
+        <p>Workout Records</p>
+        <div className="flex flex-col space-y-1">
+        {workoutRecords[currentExerciseIndex]?.map((record, index) => (
+          <div key={index} className="flex justify-between items-center p-2 border-b">
+            <span className="text-gray-800">{record.exerciseName}</span>
+            <span className="text-gray-600">{record.count}</span>
+            <span className="text-gray-600">{record.rpe}</span>
+            <span className="text-gray-600">{record.note}</span>
+          </div>
+        ))}
+        </div>
+
         <div className="flex flex-col items-center space-y-6">
           {currentExercise?.type === "weight" && (
             <>
               <NumberInputWeight 
                 value={parseFloat(weight) || 0}
                 onChange={(val) => setWeight(val.toString())}
-                textColor="text-gray-600"
+                textColor="text-gray-700"
                 text="Weight"
                 placeholder={unit}
                 className="w-full max-w-xs"
@@ -402,21 +420,33 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
                 onUnitChange={setUnit}
               />
 
-              <NumberInputRep
+              <div className="flex flex-row items-center justify-center space-x-2">
+              {/* <NumberInputOneLine
                 value={parseInt(reps) || 0}
                 onChange={(val) => setReps(val.toString())}
-                textColor="text-gray-600"
+                onIncrement={() => setReps(Math.max(0, parseInt(reps) + 1).toString())}
+                onDecrement={() => setReps(Math.max(0, parseInt(reps) - 1).toString())}
                 text="Reps"
-                className="w-full max-w-xs"
-              />
-              <NumberInputRep
-                value={parseInt(reps) || 0}
-                onChange={(val) => setReps(val.toString())}
-                textColor="text-gray-600"
-                text="RPE"
-                className="w-full max-w-xs"
-              />
+                divClassName={divClasses}
+                inputClassName={inputClasses}
+                iconClassName={iconClasses}
+                textClassName={textClasses}
+              /> */}
 
+              <NumberInputOneLine
+                value={rpe}
+                onChange={(val) => {
+                  setRpe(val.target.value);
+                }}
+                onIncrement={() => setRpe(Math.max(0, (parseInt(rpe) || 0) + 1).toString())}
+                onDecrement={() => setRpe(Math.max(0, (parseInt(rpe) || 0) - 1).toString())}
+                text="RPE"
+                divClassName={divClasses}
+                inputClassName={inputClasses}
+                iconClassName={iconClasses}
+                textClassName={textClasses}
+              />
+              </div>
             </>
           )}
 
@@ -452,7 +482,6 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
           )}
 
           <div className="flex flex-col space-y-4 w-full max-w-xs">
-            <p>Number input here</p>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -463,8 +492,9 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
             <button
               onClick={handleSaveRecord}
               className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              type="button"
             >
-              Save & Continue
+              Add Set
             </button>
           </div>
         </div>

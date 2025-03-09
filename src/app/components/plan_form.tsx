@@ -24,8 +24,8 @@ import {
 } from '@dnd-kit/sortable';
 
 import { CSS } from '@dnd-kit/utilities';
-import {NumberInput} from './number_input';
-
+import {NumberInputOneLine} from './number_input';
+import { isNumber } from '../lib/input_utils';
 interface PlanFormProps {
     plan?: Plan;
     onComplete: () => void;
@@ -44,37 +44,38 @@ const parseWeightCount = (count: string) => {
     // regrex match for "10s5r"
     const match = count.match(/(\d+)s(\d+)r/);
     if (match) {
-        return { sets: parseInt(match[1]), reps: parseInt(match[2]) };
+        return { sets: match[1], reps: match[2] };
     }
 
     // regrex match for "10r"
     const match2 = count.match(/(\d+)r/);
     if (match2) {
-        return { sets: 1, reps: parseInt(match2[1]) };
+        return { sets: "", reps: match2[1] };
     }
 
-    return { sets: 1, reps: 12 };
+    const match3 = count.match(/(\d+)s/);
+    if (match3) {
+        return { sets: match3[1], reps: "" };
+    }
+
+    return { sets: "", reps: "" };
 }
 
 const parseTimedCount = (count: string) => {
-    try {
-        return parseInt(count);
-    } catch (err) {
-        console.error('Error parsing timed count:', err);
-        return 60;
+    if (!isNumber(count)) {
+        return "";
     }
+    return count;
 }
 
 const parseCount = (count: string) => {
-    try {
-        return parseInt(count);
-    } catch (err) {
-        console.error('Error parsing count:', err);
-        return 12;
+    if (!isNumber(count)) {
+        return "";
     }
+    return count;
 }
 
-const updateSets = (count: string, sets: number) => {
+const updateSets = (count: string, sets: string) => {
     return `${sets}s${parseWeightCount(count).reps}r`;
 }
 
@@ -84,38 +85,28 @@ const updateReps = (count: string, reps: number) => {
 
 const incrementWeightSets = (count: string, num: number) => {
     const { sets, reps } = parseWeightCount(count);
-    let newSets = sets + num;
+    let newSets = parseInt(sets || "0") + num;
     if (newSets < 1) newSets = 1;
     return `${newSets}s${reps}r`;
 }
 
 const incrementWeightReps = (count: string, num: number) => {
     const { sets, reps } = parseWeightCount(count);
-    let newReps = reps + num;
+    let newReps = parseInt(reps || "0") + num;
     if (newReps < 1) newReps = 1;
     return `${sets}s${newReps}r`;
 }
 
 const incrementCountReps = (count: string, num: number) => {
-    try {
-        let newReps = parseCount(count) + num;
-        if (newReps < 1) newReps = 1;
-        return newReps.toString();
-    } catch (err) {
-        console.log('Error incrementing count reps:', err);
-        return '1';
-    }
+    let newReps = parseInt(parseCount(count) || "0") + num;
+    if (newReps < 1) newReps = 1;
+    return newReps.toString();
 }
 
 const incrementTimedCount = (count: string, num: number) => {
-    try {
-        let newSeconds = parseTimedCount(count) + num;
-        if (newSeconds < 15) newSeconds = 15;
-        return newSeconds.toString();
-    } catch (err) {
-        console.log('Error incrementing timed count:', err);
-        return '15';
-    }
+    let newSeconds = parseInt(parseTimedCount(count) || "0") + num;
+    if (newSeconds < 15) newSeconds = 15;
+    return newSeconds.toString();
 }
 
 
@@ -145,72 +136,91 @@ const SortableExerciseItem = ({ exercise: planExercise, onRemove, onCountChange 
         zIndex: isDragging ? 1 : 0,
     };
 
+    const divClasses = "flex flex-row items-center justify-center";
+    const inputClasses = "w-10 remove-arrow text-center font-bold";
+    const iconClasses = "p-1 text-gray-700  mx-1 my-1 rounded-sm";
+    const textClasses = "text-black text-md font-semibold select-none";
+
     return (
         <div
             ref={setNodeRef}
             style={style}
-            className={`flex items-center gap-2 mb-2 p-2 rounded-md border-2 ${borderColorByType(planExercise.type)} border-r-neutral-300 border-t-neutral-300 border-b-neutral-300 ${isDragging ? 'shadow-lg' : ''} touch-none`}
+            className={`flex items-center shadow-sm p-2 mb-2 rounded-sm border-2 ${borderColorByType(planExercise.type)} border-r-0 border-t-0 border-b-0 ${isDragging ? 'shadow-lg' : ''}`}
         >
             <div
                 {...attributes}
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded touch-none"
             >
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" />
                 </svg>
             </div>
             <div className="flex-grow">
-                <div className="select-none break-words overflow-wrap-normal text-md md:text-base">{planExercise.name}</div>
+                <div className="select-none break-words overflow-wrap-normal text-md md:text-base font-semibold">{planExercise.name}</div>
             </div>
             {planExercise.type === 'weight' ? (
                 <div className="flex flex-col md:flex-row items-center">
-                    <NumberInput
+                    <NumberInputOneLine
                         value={parseWeightCount(planExercise.count).sets}
-                        onChange={(e) => onCountChange(planExercise.id, updateSets(planExercise.count, parseInt(e.target.value)))}
+                        onChange={(e) => onCountChange(planExercise.id, updateSets(planExercise.count, e.target.value))}
                         onIncrement={() => onCountChange(planExercise.id, incrementWeightSets(planExercise.count, 1))}
                         onDecrement={() => onCountChange(planExercise.id, incrementWeightSets(planExercise.count, -1))}
-                        arrowColor="text-blue-400"
-                        textColor="text-blue-600"
-                        text="SET"
+                        text="Set"
                         placeholder="Sets"
+                        divClassName={divClasses}
+                        inputClassName={inputClasses}
+                        iconClassName={iconClasses}
+                        textClassName={textClasses}
                     />
-                    <NumberInput
-                        value={parseWeightCount(planExercise.count).reps}
-                        onChange={(e) => onCountChange(planExercise.id, updateReps(planExercise.count, parseInt(e.target.value)))}
+                    <NumberInputOneLine
+                        value={parseWeightCount(planExercise.count).reps.toString()}
+                        onChange={(e) => {
+                            if (e.target.value === "") {
+                                onCountChange(planExercise.id, updateReps(planExercise.count, 1));
+                            } else {
+                                onCountChange(planExercise.id, updateReps(planExercise.count, parseInt(e.target.value)));
+                            }
+                        }}
                         onIncrement={() => onCountChange(planExercise.id, incrementWeightReps(planExercise.count, 1))}
                         onDecrement={() => onCountChange(planExercise.id, incrementWeightReps(planExercise.count, -1))}
-                        arrowColor="text-yellow-400"
-                        textColor="text-yellow-500"
-                        text="REP"
+                        text="Rep"
                         placeholder="Reps"
+                        divClassName={divClasses}
+                        inputClassName={inputClasses}
+                        iconClassName={iconClasses}
+                        textClassName={textClasses}
                     />
                 </div>
             ) : planExercise.type === 'count' ? (
 
                 <div className='rounded-md sm:pl-8 cursor-pointer flex items-center'>
-                <NumberInput
+                <NumberInputOneLine
                     value={parseCount(planExercise.count)}
                     onChange={(e) => onCountChange(planExercise.id, e.target.value)}
                     onIncrement={() => onCountChange(planExercise.id, incrementCountReps(planExercise.count, 1))}
                     onDecrement={() => onCountChange(planExercise.id, incrementCountReps(planExercise.count, -1))}
-                    arrowColor="text-yellow-400"
-                    textColor="text-yellow-500"
-                    text="REP"
+                    text="Rep"
                     placeholder="Reps"
+                    divClassName={divClasses}
+                    inputClassName={inputClasses}
+                    iconClassName={iconClasses}
+                    textClassName={textClasses}
                 />
                 </div>
             ) : planExercise.type === 'timed' ? (
                 <div className="flex items-center">
-                    <NumberInput
+                    <NumberInputOneLine
                         value={parseTimedCount(planExercise.count)}
                         onChange={(e) => onCountChange(planExercise.id, e.target.value)}
                         onIncrement={() => onCountChange(planExercise.id, incrementTimedCount(planExercise.count, 15))}
                         onDecrement={() => onCountChange(planExercise.id, incrementTimedCount(planExercise.count, -15))}
-                        arrowColor="text-lime-400"
-                        textColor="text-lime-600"
-                        text="SEC"
+                        text="Sec"
                         placeholder="Seconds"
+                        divClassName={divClasses}
+                        inputClassName={inputClasses}
+                        iconClassName={iconClasses}
+                        textClassName={textClasses}
                     />
                 </div>
             ) : null}
@@ -453,7 +463,7 @@ const PlanForm: React.FC<PlanFormProps> = ({
                                         </svg>
                                     </button>
                                 </div>
-                                <div className={`px-5 transition-all duration-300 ${isExercisesCollapsed ? 'h-0 overflow-hidden' : ''}`}>
+                                <div className={`transition-all duration-300 ${isExercisesCollapsed ? 'h-0 overflow-hidden' : ''}`}>
                                     <DndContext
                                         sensors={sensors}
                                         collisionDetection={closestCenter}

@@ -1,79 +1,50 @@
-interface NumberInputProps {
-  value: number;
+import {PlusIcon, MinusIcon} from '@heroicons/react/24/outline';
+
+interface NumberInputOneLineProps {
+  value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onIncrement: () => void;
   onDecrement: () => void;
-  arrowColor: string;
-  textColor: string;
-  text: string;
-  placeholder: string;
-  className?: string;
+  divClassName?: string;
+  inputClassName?: string;
+  iconClassName?: string;
+  textClassName?: string;
+  placeholder?: string;
+  text?: string;
 }
 
-const NumberInput: React.FC<NumberInputProps> = ({
+const NumberInputOneLine: React.FC<NumberInputOneLineProps> = ({
   value,
   onChange,
   onIncrement,
   onDecrement,
-  arrowColor,
-  textColor,
-  text,
+  divClassName,
+  inputClassName,
+  iconClassName,
+  textClassName,
   placeholder,
-  className,
+  text,
 }) => {
   return (
     <div
-      className={`rounded-md p-1 cursor-pointer flex items-center ${className}`}
+      className={`${divClassName}`}
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-5 h-10 ${arrowColor} hover:bg-neutral-100`}
-        stroke="currentColor"
-        onClick={onDecrement}
-      >
-        <line
-          x1="5"
-          y1="12"
-          x2="19"
-          y2="12"
-          strokeWidth="2"
-          strokeLinecap="round"
-        ></line>
-      </svg>
-      <span className={`ml-2 ${textColor} font-bold select-none`}>{text}</span>
+      <div className={`${iconClassName}`}>
+        <MinusIcon className="w-6 h-6" onClick={onDecrement} />
+      </div>
+      
+      <span className={`${textClassName}`}>{text}</span>
       <input
-        type="number"
+        type="text"
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        inputMode="numeric"
-        className="w-8 px-1 rounded-md text-base remove-arrow text-center"
+        inputMode="decimal"
+        className={`${inputClassName}`}
       />
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className={`w-5 h-10 ${arrowColor} hover:bg-neutral-100`}
-        stroke="currentColor"
-        onClick={onIncrement}
-      >
-        <line
-          x1="12"
-          y1="5"
-          x2="12"
-          y2="19"
-          strokeWidth="2"
-          strokeLinecap="round"
-        ></line>
-        <line
-          x1="5"
-          y1="12"
-          x2="19"
-          y2="12"
-          strokeWidth="2"
-          strokeLinecap="round"
-        ></line>
-      </svg>
+      <div className={`${iconClassName}`}>
+        <PlusIcon className="w-6 h-6" onClick={onIncrement} />
+      </div>
     </div>
   );
 };
@@ -144,28 +115,28 @@ const NumberInputWeight: React.FC<NumberInputWeightProps> = ({
           </button>
         </div>
       </div>
-      <div className="flex justify-between w-full ">
+      <div className="flex justify-between w-full space-x-2">
         <button
           onClick={() => adjustWeight(-5)}
-          className="bg-gray-200 hover:bg-gray-300 text-black py-1 px-2 rounded-l flex-1"
+          className="bg-gray-100 hover:bg-gray-300 text-black py-1 px-2 rounded-l flex-1"
         >
           -5
         </button>
         <button
           onClick={() => adjustWeight(-2.5)}
-          className="shadow-sm hover:bg-gray-300 text-gray-700 py-1 px-2 flex-1"
+          className="bg-gray-100 hover:bg-gray-300 text-gray-700 py-1 px-2 flex-1"
         >
           -2.5
         </button>
         <button
           onClick={() => adjustWeight(2.5)}
-          className="shadow-sm hover:bg-gray-300 text-gray-700 py-1 px-2 flex-1"
+          className="bg-gray-100 hover:bg-gray-300 text-gray-700 py-1 px-2 flex-1"
         >
           +2.5
         </button>
         <button
           onClick={() => adjustWeight(5)}
-          className="shadow-sm hover:bg-gray-300 text-gray-700 py-1 px-2 rounded-r flex-1"
+          className="bg-gray-100 hover:bg-gray-300 text-gray-700 py-1 px-2 rounded-r flex-1"
         >
           +5
         </button>
@@ -236,4 +207,4 @@ const NumberInputRep: React.FC<NumberInputRepProps> = ({
   );
 };
 
-export { NumberInput, NumberInputWeight, NumberInputRep };
+export { NumberInputOneLine, NumberInputWeight, NumberInputRep };

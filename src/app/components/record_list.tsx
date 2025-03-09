@@ -173,35 +173,6 @@ export default function RecordList({ dash = false }: RecordListProps) {
             handleNextDay={handleNextDay}
             handleDateChange={handleDateChange}
           />
-          {/* <div className="flex items-center space-x-2">
-              <button
-                onClick={handlePreviousDay}
-                className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Previous day"
-              >
-                <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
-              </button>
-              <input
-                type="date"
-                value={format(selectedDate, 'yyyy-MM-dd')}
-                onChange={handleDateChange}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <button
-                onClick={handleNextDay}
-                className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={format(selectedDate, 'yyyy-MM-dd') >= format(new Date(), 'yyyy-MM-dd')}
-                aria-label="Next day"
-              > 
-                <ChevronRightIcon 
-                  className={`h-5 w-5 ${
-                    format(selectedDate, 'yyyy-MM-dd') >= format(new Date(), 'yyyy-MM-dd')
-                      ? 'text-gray-300'
-                      : 'text-gray-600'
-                  }`} 
-                />
-              </button>
-            </div> */}
           <button
             onClick={() => {
               setEditingRecord(null);
