@@ -1,4 +1,4 @@
-import { Exercise, ExerciseType, WeightExercise } from '../../models/exercise';
+import { Exercise, ExerciseType, WeightedExercise } from '../../models/exercise';
 import { IndexDBRepository } from './base';
 import { ExerciseRepository } from '../interfaces/repository';
 
@@ -27,8 +27,8 @@ export default class ExerciseIndexDBRepository extends IndexDBRepository<Exercis
         return super.getRange(type, "typeIndex");
     }
 
-    async getByMuscleGroup(muscleGroups: string[]): Promise<WeightExercise[]> {
-        return super.getAnyMatchedMultiEntries(muscleGroups, "muscleGroupsIndex") as Promise<WeightExercise[]>;
+    async getByMuscleGroup(muscleGroups: string[]): Promise<WeightedExercise[]> {
+        return super.getAnyMatchedMultiEntries(muscleGroups, "muscleGroupsIndex") as Promise<WeightedExercise[]>;
     }
 
     async getByName(name: string): Promise<Exercise> {

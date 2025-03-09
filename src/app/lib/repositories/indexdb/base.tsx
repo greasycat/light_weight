@@ -11,21 +11,41 @@ export class IndexDBRepository<T extends IDItem> implements Repository<T> {
         this.dbPromise = this.openOrUpgrade(upgradeCallback);
     }
 
+    async deleteDatabase (): Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            await this.close();
+            const request = window.indexedDB.deleteDatabase(this.dbName);
+            request.onsuccess = () => {
+                console.log("Database deleted");
+                resolve();
+            }
+            request.onerror = (event: Event) => {
+                console.error("Database deletion error:", (event.target as IDBRequest).error);
+                reject((event.target as IDBRequest).error);
+            }
+        });
+    }
+
     async openOrUpgrade(upgradeCallback: (db: IDBDatabase) => void): Promise<IDBDatabase> {
         return new Promise((resolve, reject) => {
-            const openRequest = indexedDB.open(this.dbName);
+            const openRequest = window.indexedDB.open(this.dbName);
             openRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
                 const db = (event.target as IDBOpenDBRequest).result;
                 upgradeCallback(db);
             }
 
-            openRequest.onsuccess = () => {
+            openRequest.onsuccess = (event: Event) => {
                 const db = openRequest.result as IDBDatabase;
                 db.onclose = () => {
                     console.log('IndexDBRepository: Database closed');
                 }
                 db.onerror = (event: Event) => {
-                    console.error('IndexDBRepository: Database error:', (event.target as IDBRequest).error);
+                    const errorType = (event.target as IDBRequest).error?.name;
+                    if (errorType === 'ConstraintError') {
+                        return;
+                    }
+
+                    console.error('IndexDBRepository: Database error:', (event.target as IDBRequest).error?.name);
                 }
                 resolve(db);
 
@@ -44,15 +64,19 @@ export class IndexDBRepository<T extends IDItem> implements Repository<T> {
             transaction.onabort = () => reject(new Error('Transaction aborted'));
             transaction.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 
+            // remove id from item
             const store = transaction.objectStore(this.storeName);
-            const request = store.add(item);
+
+            // remove id from item
+            const { id, ...itemWithoutId } = item;
+            const request = store.add(itemWithoutId);
 
             request.onsuccess = () => {
-                const id = request.result as IDBValidKey;
-                const itemWithId = { ...item, id };
-                resolve(itemWithId as T);
+                resolve(item);
             }
-            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+            request.onerror = (event: Event) => {
+                reject((event.target as IDBRequest).error?.name || 'Unknown error');
+            }
         })
     
     }
@@ -74,6 +98,11 @@ export class IndexDBRepository<T extends IDItem> implements Repository<T> {
         })
     }
 
+    async close(): Promise<void> {
+        const db = await this.dbPromise
+        db.close();
+    }
+
     async delete(item: T): Promise<void> {
         const db = await this.dbPromise
         return new Promise((resolve, reject) => {
@@ -83,6 +112,23 @@ export class IndexDBRepository<T extends IDItem> implements Repository<T> {
 
             const store = transaction.objectStore(this.storeName);
             const request = store.delete(item.id);
+
+            request.onsuccess = () => {
+                resolve();
+            }
+            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+        })
+    }
+
+    async clear(): Promise<void> {
+        const db = await this.dbPromise
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([this.storeName], 'readwrite');
+            transaction.onabort = () => reject(new Error('Transaction aborted'));
+            transaction.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+
+            const store = transaction.objectStore(this.storeName);
+            const request = store.clear();
 
             request.onsuccess = () => {
                 resolve();

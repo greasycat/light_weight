@@ -1,20 +1,20 @@
 export const REPOSITORY_CONSTANTS = {
     INDEXDB: {
         EXERCISE: {
-            STORE_NAME: 'exercise',
-            DB_NAME: 'exercise',
+            STORE_NAME: 'exercises',
+            DB_NAME: 'exercises',
         },
         WORKOUT: {
-            STORE_NAME: 'workout',
-            DB_NAME: 'workout',
+            STORE_NAME: 'workouts',
+            DB_NAME: 'workouts',
         },
         PLAN: {
-            STORE_NAME: 'plan',
-            DB_NAME: 'plan',
+            STORE_NAME: 'plans',
+            DB_NAME: 'plans',
         },
         RECORD: {
-            STORE_NAME: 'record',
-            DB_NAME: 'record',
+            STORE_NAME: 'records',
+            DB_NAME: 'records',
         }
     }    
 } 

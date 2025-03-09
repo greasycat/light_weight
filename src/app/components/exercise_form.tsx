@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Exercise, ExerciseDB } from '../lib/indexdb_handler'
 import { renderTypeBadge } from '../lib/exercise_utils'
 
 interface ExerciseFormProps {

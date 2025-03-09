@@ -2,10 +2,9 @@
 
 import { useState } from 'react'
 import { useAppConfig, StorageType, Theme } from '@/app/lib/config_store'
-import { ExerciseDB } from '../lib/indexdb_handler'
 
 export default function ConfigEdit() {
-  const { config, loaded, toggleStorageType, toggleTheme, updateConfig} = useAppConfig()
+  const { config, loaded, toggleStorageType, toggleTheme, updateConfig } = useAppConfig()
   const [showPanel, setShowPanel] = useState(false)
   const [dbUrl, setDbUrl] = useState(config.postgresUrl || '')
   const [loading, setLoading] = useState(false)
@@ -146,8 +145,8 @@ export default function ConfigEdit() {
               <button
                 onClick={toggleStorageType}
                 className={`px-4 py-2 rounded-md ${config.storageType === StorageType.POSTGRES
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-blue-500 text-white'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-blue-500 text-white'
                   }`}
               >
                 {config.storageType === StorageType.POSTGRES
@@ -198,102 +197,19 @@ export default function ConfigEdit() {
             <button
               onClick={toggleTheme}
               className={`px-4 py-2 rounded-md ${config.theme === Theme.DARK
-                  ? 'bg-gray-800 text-white'
-                  : 'bg-yellow-500 text-white'
+                ? 'bg-gray-800 text-white'
+                : 'bg-yellow-500 text-white'
                 }`}
             >
               {config.theme === Theme.DARK ? 'Dark Mode' : 'Light Mode'}
             </button>
           </div>
-
-          
-
-          {showPanel && (
-            <div className="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-200">
-              <h4 className="text-md font-medium mb-3">Advanced Settings</h4>
-              <p className="text-xs text-gray-500">
-                Additional configuration options will be available here in future updates.
-              </p>
-           <div className="space-y-8">
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Record Management</h2>
-              <div className="flex space-x-4">
-                <button
-                  onClick={handleClearRecords}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  Clear All Records
-                </button>
-                <button
-                  onClick={handlePopulateRecords}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-                >
-                  Add Sample Records
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Exercise Management</h2>
-              <div className="flex space-x-4">
-                <button
-                  onClick={handleClearExercises}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  Clear All Exercises
-                </button>
-                <button
-                  onClick={handlePopulateExercises}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-                >
-                  Add Sample Exercises
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Sample Data</h2>
-              <div className="flex space-x-4">
-                <button
-                  onClick={handleClearAllPlans}
-                  disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  {isLoading ? 'Deleting...' : 'Delete All Plans'}
-                </button>
-                <button
-                  onClick={handlePopulateSamplePlans}
-                  disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-                >
-                  {isLoading ? 'Adding...' : 'Add Sample Plans'}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Data Management</h2>
-              <button
-                onClick={handleRemoveAllData}
-                disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-              >
-                Remove All Data
-              </button>
-            </div>
-          </div> </div>
-          )}
         </div>
       </div>
 
       {message && (
-        <div className={`p-3 rounded-md mb-4 ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-        }`}>
+        <div className={`p-3 rounded-md mb-4 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          }`}>
           {message.text}
         </div>
       )}

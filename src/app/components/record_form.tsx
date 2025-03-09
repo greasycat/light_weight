@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Exercise, ExerciseRecord, ExerciseDB } from '../lib/indexdb_handler'
 import { filterExercises, SearchInput } from '../lib/search_utils'
 import { renderTypeBadge, formatDefaultCount } from '../lib/exercise_utils'
 import { addDays, addHours, subDays, subHours, format, isSameDay, isBefore, set } from 'date-fns'

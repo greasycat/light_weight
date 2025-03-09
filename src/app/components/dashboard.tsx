@@ -7,11 +7,12 @@ import RecordList from "./record_list";
 import WeekTracker from "./week_tracker";
 import PlanList from "./plan_list";
 import WorkoutBuilder from "./workout_builder";
+import BackendTest from "./backend_test";
 
-type TabType = "dashboard" | "exercises" | "records" | "plans" | "settings";
+type TabType = "dashboard" | "exercises" | "records" | "plans" | "settings" | "backend_test";
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [activeTab, setActiveTab] = useState<TabType>("exercises");
   const [isAnimating, setIsAnimating] = useState(false);
   const [showWorkoutBuilder, setShowWorkoutBuilder] = useState(false);
 
@@ -21,6 +22,7 @@ export default function Dashboard() {
     { id: "records", name: "Records" },
     { id: "plans", name: "Plans" },
     { id: "settings", name: "Settings" },
+    { id: "backend_test", name: "Backend Test" },
   ];
 
   // Get the current tab index and calculate visible tabs
@@ -44,10 +46,6 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl pt-0">
-      {/* <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Workout Tracker</h1>
-      </div> */}
-
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex justify-center" aria-label="Tabs">
@@ -120,6 +118,8 @@ export default function Dashboard() {
         {activeTab === "plans" && <PlanList />}
 
         {activeTab === "settings" && <ConfigEdit />}
+
+        {activeTab === "backend_test" && <BackendTest />}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Exercise } from './indexdb_handler';
+import { Exercise } from './models/exercise';
 
 export const filterExercises = (exercises: Exercise[], searchTerm: string): Exercise[] => {
   if (searchTerm.trim() === '') {

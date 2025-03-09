@@ -1,8 +1,8 @@
 import { ExerciseType, Unit } from "./exercise";
+import { IDItem } from "../repositories/interfaces/repository";
 
-export interface Record {
-    id: string;
-    exerciseId: string;
+export interface Record extends IDItem {
+    exerciseId: number;
     type: ExerciseType;
     timestamp: Date;
 }

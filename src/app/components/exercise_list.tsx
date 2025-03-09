@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Exercise, ExerciseDB } from '../lib/indexdb_handler';
+import React, { useState, useEffect, useRef } from 'react';
 import { filterExercises, SearchInput } from '../lib/search_utils';
-import { renderTypeBadge } from '../lib/exercise_utils';
+import { renderTypeBadge, renderTypeCount } from '../lib/exercise_utils';
 import ExerciseForm from './exercise_form'
+import { Exercise, WeightedExercise, TimedExercise, CountedExercise } from '../lib/models/exercise';
+import { ExerciseRepository } from '../lib/repositories/interfaces/repository';
+import RepositoryFactory from '../lib/repositories/factory';
+import LongPressable from './common/long_pressable';
 
 interface ExerciseListProps {
   onSelectExercise?: (exercise: Exercise) => void;
@@ -13,24 +16,18 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [pressedExercise, setPressedExercise] = useState<Exercise | null>(null);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [, setIsLongPressing] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const exerciseRepositoryRef = useRef<ExerciseRepository>(RepositoryFactory.getExerciseRepository('indexdb'));
 
   const loadExercises = async () => {
     try {
-      setLoading(true);
-      const data = await ExerciseDB.getAllExercises();
+      const data = await exerciseRepositoryRef.current.getAll();
       setExercises(data);
       setFilteredExercises(data);
-      setLoading(false);
     } catch (err) {
       setError('Failed to load exercises');
-      setLoading(false);
       console.error('Error loading exercises:', err);
     }
   };
@@ -51,100 +48,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
     setSearchTerm(e.target.value);
   };
 
-  // Clean up long press timer
-  useEffect(() => {
-    if (pressedExercise) {
-      setIsLongPressing(true);
-      setLoadingProgress(0);
-      
-      const interval = setInterval(() => {
-        setLoadingProgress(prev => {
-          if (prev >= 100) {
-            setEditingExercise(pressedExercise);
-            setShowForm(true);
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 50);
-      
-      return () => clearInterval(interval);
-    } else {
-      setIsLongPressing(false);
-      setLoadingProgress(0);
-    }
-  }, [pressedExercise]);
-
-  const loadingBarStyle = (exercise: Exercise): React.CSSProperties => ({
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    height: '100%',
-    width: `${pressedExercise === exercise ? loadingProgress : 0}%`,
-    backgroundColor: 'rgba(133, 133, 133, 0.25)',
-    transition: 'width 0.05s linear',
-    zIndex: 0,
-  });
-  
-  
-  const handleMouseDown = (exercise: Exercise) => {
-    setPressedExercise(exercise);
-  };
-  
-  const handleMouseUp = () => {
-    setPressedExercise(null);
-  };
-
   // Render count based on exercise type
-  const renderTypeCount = (exercise: Exercise) => {
-    const { type, defaultCount } = exercise;
-
-    switch (type) {
-      case 'weight': {
-        const match = defaultCount.match(/(\d+)s(\d+)r/);
-        if (match) {
-          const [, sets, reps] = match;
-          return (
-            <div className="flex flex-col items-end text-sm">
-              <span className="font-medium text-gray-900 select-none">{sets} sets</span>
-              <span className="text-gray-600 select-none">{reps} reps</span>
-            </div>
-          );
-        }
-        return defaultCount;
-      }
-      case 'timed': {
-        const seconds = parseInt(defaultCount);
-        if (!isNaN(seconds)) {
-          const minutes = Math.floor(seconds / 60);
-          const remainingSeconds = seconds % 60;
-          return (
-            <div className="flex flex-col items-end text-sm">
-              <span className="font-medium text-gray-900 select-none">
-                {minutes > 0 ? `${minutes} min` : ''} 
-                {remainingSeconds > 0 ? `${remainingSeconds} sec` : minutes === 0 ? '0 sec' : ''}
-              </span>
-            </div>
-          );
-        }
-        return defaultCount;
-      }
-      case 'count': {
-        const seconds = parseInt(defaultCount);
-        if (!isNaN(seconds)) {
-          return (
-            <div className="flex flex-col items-end text-sm">
-              <span className="font-medium text-gray-900 select-none">{seconds} sec</span>
-            </div>
-          );
-        }
-        return defaultCount;
-      }
-      default:
-        return defaultCount;
-    }
-  };
 
   const handleExerciseComplete = async () => {
     await loadExercises() // Refresh the list
@@ -186,14 +90,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
       </div>
 
       {/* Exercise List */}
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
           <p>{error}</p>
         </div>
@@ -207,23 +104,22 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
             <div 
               key={exercise.name}
               className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 relative"
-              onMouseDown={() => handleMouseDown(exercise)}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={() => handleMouseDown(exercise)}
-              onTouchEnd={handleMouseUp}
             >
-              <div className="flex items-center justify-between">
-                <div style={loadingBarStyle(exercise)}></div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 select-none">{exercise.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1 select-none">{exercise.instruction}</p>
+              <LongPressable onTrigger={() => {
+                setEditingExercise(exercise)
+                setShowForm(true)
+              }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 select-none">{exercise.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1 select-none">{exercise.description}</p>
                 </div>
                 <div className="flex flex-col items-end space-y-2">
-                  {renderTypeBadge(exercise.type)}
+                  {renderTypeBadge(exercise)}
                   {renderTypeCount(exercise)}
                 </div>
-              </div>
+                </div>
+              </LongPressable>
             </div>
           ))}
         </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { format, startOfWeek, addDays } from 'date-fns'
-import { ExerciseDB } from '../lib/indexdb_handler'
 
 type WeekDate = {
     dayName: string;

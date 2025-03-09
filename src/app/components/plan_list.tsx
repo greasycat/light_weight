@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plan, ExerciseDB, Exercise } from '../lib/indexdb_handler'
 import PlanForm from './plan_form'
 import { getExerciseCount } from '../lib/exercise_utils'
 

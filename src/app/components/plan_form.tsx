@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Plan, Exercise, ExerciseDB, PlanExercise } from '../lib/indexdb_handler';
 import { filterExercises, SearchInput } from '../lib/search_utils';
 import { renderTypeBadge } from '../lib/exercise_utils';
 import {

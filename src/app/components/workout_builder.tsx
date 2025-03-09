@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plan, ExerciseDB, ExerciseRecord } from "../lib/indexdb_handler";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

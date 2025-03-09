@@ -9,7 +9,6 @@ import {
   startOfDay,
   endOfDay,
 } from "date-fns";
-import { ExerciseDB, ExerciseRecord } from "../lib/indexdb_handler";
 // import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import RecordForm from "./record_form";
 import DateSelector from "./date_selector";
