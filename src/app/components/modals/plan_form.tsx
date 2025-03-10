@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { filterExercises, SearchInput } from '../lib/search_utils';
-import { renderTypeBadge } from '../lib/exercise_utils';
+import { filterExercises, SearchInput } from '../common/search_utils';
+import { renderExerciseTypeBadge } from '../widgets/exercise_utils';
 import {
     DndContext,
     closestCenter,
@@ -23,8 +23,8 @@ import {
 } from '@dnd-kit/sortable';
 
 import { CSS } from '@dnd-kit/utilities';
-import {NumberInputOneLine} from './number_input';
-import { isNumber } from '../lib/input_utils';
+import {NumberInputOneLine} from '../widgets/number_input';
+import { isNumber } from '../../lib/input_utils';
 interface PlanFormProps {
     plan?: Plan;
     onComplete: () => void;
@@ -506,7 +506,7 @@ const PlanForm: React.FC<PlanFormProps> = ({
                                                 className="flex items-center justify-between p-3 rounded-md hover:bg-gray-100 cursor-pointer active:bg-gray-200 select-none border-2 border-gray-100"
                                             >
                                                 <div className="font-medium truncate mr-2">{exercise.name}</div>
-                                                {renderTypeBadge(exercise.type)}
+                                                {renderExerciseTypeBadge(exercise.type)}
                                             </div>
                                         ))}
                                     </div>

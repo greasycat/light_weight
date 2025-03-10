@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { filterExercises, SearchInput } from '../lib/search_utils'
-import { renderTypeBadge, formatDefaultCount } from '../lib/exercise_utils'
+import { renderExerciseTypeBadge, formatDefaultCount } from '../lib/exercise_utils'
 import { addDays, addHours, subDays, subHours, format, isSameDay, isBefore, set } from 'date-fns'
 import DateSelector from './date_selector'
 import TimeSelector from './time_selector'
@@ -289,7 +289,7 @@ export default function RecordForm({
                     {selectedExercise ? (
                       <div className="flex justify-between items-center p-3 border rounded-md">
                         <p className="font-medium">{selectedExercise.name}</p>
-                        {renderTypeBadge(selectedExercise.type)}
+                        {renderExerciseTypeBadge(selectedExercise.type)}
                         {!record && (
                           <button
                             type="button"
@@ -310,7 +310,7 @@ export default function RecordForm({
                           >
                             <div className="flex items-center justify-between">
                               <p className="font-medium">{exercise.name}</p>
-                              {renderTypeBadge(exercise.type)}
+                              {renderExerciseTypeBadge(exercise.type)}
                             </div>
                           </div>
                         ))}

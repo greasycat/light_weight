@@ -6,7 +6,10 @@ export enum ExerciseType {
     Count = 'count'
 }
 
-export type Unit = 'metric' | 'imperial';
+export enum Unit {
+    Metric = 'kg',
+    Imperial = 'lb'
+}
 
 export interface Exercise extends IDItem {
     name: string;

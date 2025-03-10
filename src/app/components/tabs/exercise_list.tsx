@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { filterExercises, SearchInput } from '../lib/search_utils';
-import { renderTypeBadge, renderTypeCount } from '../lib/exercise_utils';
-import ExerciseForm from './exercise_form'
-import { Exercise, WeightedExercise, TimedExercise, CountedExercise } from '../lib/models/exercise';
-import { ExerciseRepository } from '../lib/repositories/interfaces/repository';
-import RepositoryFactory from '../lib/repositories/factory';
-import LongPressable from './common/long_pressable';
+import { filterExercises, SearchInput } from '../common/search_utils';
+import { renderExerciseTypeBadge, renderTypeCount } from '../widgets/exercise_utils';
+import ExerciseForm from '../modals/exercise_form'
+import { Exercise} from '../../lib/models/exercise';
+import { ExerciseRepository } from '../../lib/repositories/interfaces/repository';
+import RepositoryFactory from '../../lib/repositories/factory';
+import LongPressable from '../common/long_pressable';
 
 interface ExerciseListProps {
   onSelectExercise?: (exercise: Exercise) => void;
@@ -115,7 +115,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
                   <p className="text-sm text-gray-500 mt-1 select-none">{exercise.description}</p>
                 </div>
                 <div className="flex flex-col items-end space-y-2">
-                  {renderTypeBadge(exercise)}
+                  {renderExerciseTypeBadge(exercise)}
                   {renderTypeCount(exercise)}
                 </div>
                 </div>

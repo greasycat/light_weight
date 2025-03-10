@@ -4,9 +4,9 @@ import { useState } from "react";
 import ConfigEdit from "./config_edit";
 import ExerciseList from "./exercise_list";
 import RecordList from "./record_list";
-import WeekTracker from "./week_tracker";
+import WeekTracker from "../widgets/week_tracker";
 import PlanList from "./plan_list";
-import WorkoutBuilder from "./workout_builder";
+import WorkoutBuilder from "../workout_builder";
 import BackendTest from "./backend_test";
 
 type TabType = "dashboard" | "exercises" | "records" | "plans" | "settings" | "backend_test";

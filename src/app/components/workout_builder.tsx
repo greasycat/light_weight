@@ -7,7 +7,7 @@ import {
   PlusIcon,
   MinusIcon,
 } from "@heroicons/react/24/outline";
-import { NumberInputOneLine, NumberInputRep, NumberInputWeight } from "./number_input";
+import { NumberInputOneLine, NumberInputRep, NumberInputWeight } from "./widgets/number_input";
 
 interface WorkoutBuilderProps {
   onClose: () => void;
@@ -409,8 +409,8 @@ const WorkoutBuilder = ({ onClose }: WorkoutBuilderProps) => {
           {currentExercise?.type === "weight" && (
             <>
               <NumberInputWeight 
-                value={parseFloat(weight) || 0}
-                onChange={(val) => setWeight(val.toString())}
+                weight={parseFloat(weight) || 0}
+                onWeightChange={(val) => setWeight(val.toString())}
                 textColor="text-gray-700"
                 text="Weight"
                 placeholder={unit}

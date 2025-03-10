@@ -1,14 +1,18 @@
 import React from 'react';
-import { CountedExercise, Exercise, TimedExercise, WeightedExercise } from './models/exercise';
+import { CountedExercise, Exercise, TimedExercise, WeightedExercise, ExerciseType } from '../../lib/models/exercise';
 
-export function renderTypeBadge(exercise: Exercise) {
-  if ('weight' in exercise) {
+export function renderExerciseTypeBadge(exercise: Exercise) {
+  return renderTypeBadge(exercise.type)
+}
+
+export function renderTypeBadge(type: ExerciseType) {
+  if (type === ExerciseType.Weight) {
     return <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">Weight</span>
   }
-  else if ('time' in exercise) {
+  else if (type === ExerciseType.Timed) {
     return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">Timed</span>
   }
-  else if ('count' in exercise) {
+  else if (type === ExerciseType.Count) {
     return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">Count</span>
   }
   else {
@@ -17,7 +21,7 @@ export function renderTypeBadge(exercise: Exercise) {
 }
 
 export function renderTypeCount(exercise: Exercise) {
-  if ('weight' in exercise) {
+  if (exercise.type === ExerciseType.Weight) {
     const weightedExercise = exercise as WeightedExercise;
     return (
       <div className="flex flex-col items-end text-sm">
@@ -26,7 +30,7 @@ export function renderTypeCount(exercise: Exercise) {
       </div>
     )
   }
-  else if ('time' in exercise) {
+  else if (exercise.type === ExerciseType.Timed) {
     const timedExercise = exercise as TimedExercise;
     const seconds = timedExercise.time;
     const minutes = Math.floor(seconds / 60);
@@ -40,7 +44,7 @@ export function renderTypeCount(exercise: Exercise) {
       </div>
     );
   }
-  else if ('count' in exercise) {
+  else if (exercise.type === ExerciseType.Count) {
     const countedExercise = exercise as CountedExercise;
     return (
       <div className="flex flex-col items-end text-sm">

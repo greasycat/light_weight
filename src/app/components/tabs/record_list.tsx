@@ -10,8 +10,8 @@ import {
   endOfDay,
 } from "date-fns";
 // import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import RecordForm from "./record_form";
-import DateSelector from "./date_selector";
+import RecordForm from "../modals/exercise_form";
+import DateSelector from "../widgets/date_selector";
 
 interface RecordListProps {
   dash?: boolean;
