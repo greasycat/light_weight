@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { filterExercises, SearchInput } from '../common/search_utils';
-import { renderExerciseTypeBadge } from '../widgets/exercise_utils';
+import SearchBar from '@/app/components/common/search_bar';
+import { renderExerciseTypeBadge } from '@/app/components/widgets/exercise_utils';
 import {
     DndContext,
     closestCenter,
@@ -24,7 +24,6 @@ import {
 
 import { CSS } from '@dnd-kit/utilities';
 import {NumberInputOneLine} from '../widgets/number_input';
-import { isNumber } from '../../lib/input_utils';
 interface PlanFormProps {
     plan?: Plan;
     onComplete: () => void;
@@ -491,7 +490,7 @@ const PlanForm: React.FC<PlanFormProps> = ({
                             ) : (
                                 <>
                                     <div className="mb-2">
-                                        <SearchInput
+                                        <SearchBar
                                             value={searchTerm}
                                             onChange={handleSearchChange}
                                             placeholder="Search exercises to add..."

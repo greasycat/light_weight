@@ -1,5 +1,6 @@
 import React from 'react';
 import { CountedExercise, Exercise, TimedExercise, WeightedExercise, ExerciseType } from '../../lib/models/exercise';
+import { Record } from '../../lib/models/record';
 
 export function renderExerciseTypeBadge(exercise: Exercise) {
   return renderTypeBadge(exercise.type)
@@ -20,7 +21,7 @@ export function renderTypeBadge(type: ExerciseType) {
   }
 }
 
-export function renderTypeCount(exercise: Exercise) {
+export function renderTypeCount(exercise: Exercise | Record) {
   if (exercise.type === ExerciseType.Weight) {
     const weightedExercise = exercise as WeightedExercise;
     return (

@@ -1,26 +1,13 @@
 import React from 'react';
-import { Exercise } from '../../lib/models/exercise';
 
-export const filterExercises = (exercises: Exercise[], searchTerm: string): Exercise[] => {
-  if (searchTerm.trim() === '') {
-    return exercises;
-  }
-  
-  const lowercaseSearch = searchTerm.toLowerCase();
-  return exercises.filter(exercise => 
-    exercise.name.toLowerCase().includes(lowercaseSearch) || 
-    exercise.type.toLowerCase().includes(lowercaseSearch)
-  );
-};
-
-interface SearchInputProps {
+interface SearchBarProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
   placeholder?: string;
 }
 
-export const SearchInput: React.FC<SearchInputProps> = ({ 
+const SearchBar: React.FC<SearchBarProps> = ({ 
   value, 
   onChange, 
   className = '', 
@@ -43,3 +30,5 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     </div>
   );
 }; 
+
+export default SearchBar;

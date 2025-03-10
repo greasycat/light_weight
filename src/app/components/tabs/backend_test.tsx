@@ -1,10 +1,10 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useState } from "react";
-import SampleFactory from "../lib/repositories/sample_factory";
-import { Exercise } from "../lib/models/exercise";
-import RepositoryFactory from "../lib/repositories/factory";
-import { Plan } from "../lib/models/plan";
-import { Record } from "../lib/models/record";
+import SampleFactory from "@/app/lib/repositories/sample_factory";
+import { Exercise } from "@/app/lib/models/exercise";
+import RepositoryFactory from "@/app/lib/repositories/factory";
+import { Plan } from "@/app/lib/models/plan";
+import { Record } from "@/app/lib/models/record";
 
 export default function BackendTest() {
     const [allExercises, setAllExercises] = useState<Exercise[]>([]);

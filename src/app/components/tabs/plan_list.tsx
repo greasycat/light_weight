@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import PlanForm from './plan_form'
-import { getExerciseCount } from '../lib/exercise_utils'
+import PlanForm from '@/app/components/modals/plan_form'
+import { Plan } from '@/app/lib/models/plan'
+import { Exercise } from '@/app/lib/models/exercise'
 
 export default function PlanList() {
   const [plans, setPlans] = useState<Plan[]>([])

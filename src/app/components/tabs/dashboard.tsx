@@ -1,13 +1,13 @@
 "use client";
 import { useState } from "react";
 
-import ConfigEdit from "./config_edit";
-import ExerciseList from "./exercise_list";
+import ConfigEdit from "@/app/components/tabs/config_edit";
+import ExerciseList from "@/app/components/tabs/exercise_list";
+import WeekTracker from "@/app/components/widgets/week_tracker";
+import PlanList from "@/app/components/tabs/plan_list";
+import WorkoutBuilder from "@/app/components/workout_builder";
+import BackendTest from "@/app/components/tabs/backend_test";
 import RecordList from "./record_list";
-import WeekTracker from "../widgets/week_tracker";
-import PlanList from "./plan_list";
-import WorkoutBuilder from "../workout_builder";
-import BackendTest from "./backend_test";
 
 type TabType = "dashboard" | "exercises" | "records" | "plans" | "settings" | "backend_test";
 
@@ -106,8 +106,8 @@ export default function Dashboard() {
 
         {/* Tab Panels */}
         {activeTab === "dashboard" && (
-          <div>
-            <RecordList dash={true} />
+          <div className="bg-gray-50 rounded-md shadow-sm p-6">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
           </div>
         )}
 

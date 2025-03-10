@@ -1,10 +1,11 @@
+import { subDays, subHours, subMinutes } from "date-fns";
 // Sample WeightRecord data
 const weightRecords = [
     {
       id: 101,
       exerciseId: 1, // Referencing Barbell Bench Press
       type: "weight",
-      timestamp: new Date("2025-02-10T09:15:00Z"),
+      timestamp: new Date(),
       weight: 85,
       unit: "metric",
       reps: 6,
@@ -14,7 +15,7 @@ const weightRecords = [
       id: 102,
       exerciseId: 2, // Referencing Deadlift
       type: "weight",
-      timestamp: new Date("2025-02-12T10:30:00Z"),
+      timestamp: subHours(new Date(), 1),
       weight: 130,
       unit: "metric",
       reps: 4,
@@ -24,7 +25,7 @@ const weightRecords = [
       id: 103,
       exerciseId: 3, // Referencing Dumbbell Shoulder Press
       type: "weight",
-      timestamp: new Date("2025-02-14T16:45:00Z"),
+      timestamp: subHours(new Date(), 2),
       weight: 30,
       unit: "imperial",
       reps: 8,
@@ -34,7 +35,7 @@ const weightRecords = [
       id: 104,
       exerciseId: 4, // Referencing Barbell Squat
       type: "weight",
-      timestamp: new Date("2025-02-15T08:20:00Z"),
+      timestamp: subDays(new Date(), 1),
       weight: 110,
       unit: "metric",
       reps: 5,

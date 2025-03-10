@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { filterExercises, SearchInput } from '../lib/search_utils'
-import { renderExerciseTypeBadge, formatDefaultCount } from '../lib/exercise_utils'
+import { filterExercises, SearchInput } from '@/app/components/common/search_bar'
+import { renderExerciseTypeBadge, formatDefaultCount } from '@/app/components/widgets/exercise_utils'
 import { addDays, addHours, subDays, subHours, format, isSameDay, isBefore, set } from 'date-fns'
-import DateSelector from './date_selector'
-import TimeSelector from './time_selector'
+import DateSelector from '@/app/components/common/date_selector'
+import TimeSelector from '@/app/components/common/time_selector'
 
 interface RecordFormProps {
   record?: ExerciseRecord
