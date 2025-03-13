@@ -1,6 +1,6 @@
 import React from 'react';
-import { CountedExercise, Exercise, TimedExercise, WeightedExercise, ExerciseType } from '../../lib/models/exercise';
-import { Record } from '../../lib/models/record';
+import { CountedExercise, Exercise, TimedExercise, WeightedExercise, ExerciseType, Unit } from '../../lib/models/exercise';
+import { Record, WeightRecord, TimedRecord, CountRecord } from '../../lib/models/record';
 
 export function renderExerciseTypeBadge(exercise: Exercise) {
   return renderTypeBadge(exercise.type)
@@ -55,5 +55,36 @@ export function renderTypeCount(exercise: Exercise | Record) {
   }
   else {
     return (<div>Unknown exercise type</div>);
+  }
+}
+
+export function renderWeightRecordProperties(record: Record) {
+  if (record.type === ExerciseType.Weight) {
+    const weightRecord = record as WeightRecord;
+    return (
+      <>
+      <div className="flex flex-col items-center text-sm space-x-2">
+        <span className="text-black font-medium select-none">{weightRecord.weight} {weightRecord.unit.toString()}</span>
+        <div className="flex flex-row items-end text-sm space-x-2">
+          <span className="text-gray-800 select-none">{weightRecord.sets} sets</span>
+          <span className="text-gray-500 select-none">{weightRecord.reps} reps</span>
+        </div>
+        <span className="text-gray-500 select-none">{weightRecord.rpe} RPE</span>
+      </div>
+      
+      </>
+    )
+
+  }
+  else if (record.type === ExerciseType.Timed) {
+    const timedRecord = record as TimedRecord;
+    return <span className="text-gray-500 select-none">{timedRecord.time} seconds</span>
+  }
+  else if (record.type === ExerciseType.Count) {
+    const countRecord = record as CountRecord;
+    return <span className="text-gray-500 select-none">{countRecord.count} reps</span>
+  }
+  else {
+    return <span className="text-gray-500 select-none">Unknown record type</span>
   }
 }

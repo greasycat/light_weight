@@ -53,8 +53,10 @@ export default function BackendTest() {
     const clearAllData = async () => {
         setAllRecords([]);
         setAllExercises([]);
-        exerciseRepositoryRef.current.deleteDatabase();
-        recordRepositoryRef.current.deleteDatabase();
+        await exerciseRepositoryRef.current.deleteDatabase();
+        await recordRepositoryRef.current.deleteDatabase();
+        //refresh page
+        window.location.reload();
     }
 
     const getExerciseName = async (record: Record) => {

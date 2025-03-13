@@ -14,7 +14,10 @@ import DateSelector from "@/app/components/common/date_selector";
 import { Record } from "@/app/lib/models/record";
 import LongPressable from "../common/long_pressable";
 import RepositoryFactory from "@/app/lib/repositories/factory";
-import { renderTypeCount } from "../widgets/exercise_utils";
+import {
+  renderTypeCount,
+  renderWeightRecordProperties,
+} from "../widgets/exercise_utils";
 
 export default function RecordList() {
   const [records, setRecords] = useState<Record[]>([]);
@@ -28,14 +31,17 @@ export default function RecordList() {
   const exerciseRepositoryRef = useRef(
     RepositoryFactory.getExerciseRepository("indexdb")
   );
-  
+
   const getExerciseName = async (record: Record) => {
-    const exercise = await exerciseRepositoryRef.current.get(record.exerciseId, "key");
+    const exercise = await exerciseRepositoryRef.current.get(
+      record.exerciseId,
+      "key"
+    );
     if (exercise) {
       return exercise.name;
     }
     return "Unknown";
-  }
+  };
 
   const loadRecords = useCallback(async () => {
     try {
@@ -164,18 +170,20 @@ export default function RecordList() {
                     setShowForm(true);
                   }}
                 >
-                  <div className="flex items-center justify-between relative z-10">
-                    <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500 select-none">
-                      {format(new Date(record.timestamp), "hh:mm a")}
-                    </span>
-                      <span className="font-medium select-none pr-2">
-                        {getExerciseName(record)}
-                      </span>
-                      <span className="text-gray-500 select-none">
-                        {renderTypeCount(record)}
-                      </span>
-                    </div>
+                  <div className="flex justify-between relative z-10">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500 select-none">
+                          {format(new Date(record.timestamp), "hh:mm a")}
+                        </span>
+                        <span className="font-medium select-none">
+                          {getExerciseName(record)}
+                        </span>
+                        <span className="text-xs text-gray-500 select-none">
+                          {record.notes}
+                        </span>
+                      </div>
+
+                      {renderWeightRecordProperties(record)}
                   </div>
                 </LongPressable>
               </div>

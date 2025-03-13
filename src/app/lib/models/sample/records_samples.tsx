@@ -1,55 +1,66 @@
 import { subDays, subHours, subMinutes } from "date-fns";
+import { Unit, ExerciseType } from "../exercise";
 // Sample WeightRecord data
 const weightRecords = [
     {
       id: 101,
       exerciseId: 1, // Referencing Barbell Bench Press
-      type: "weight",
+      type: ExerciseType.Weight,
       timestamp: new Date(),
       weight: 85,
-      unit: "metric",
+      unit: Unit.Metric,
       reps: 6,
-      sets: 4
+      sets: 4,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 102,
       exerciseId: 2, // Referencing Deadlift
-      type: "weight",
+      type: ExerciseType.Weight,
       timestamp: subHours(new Date(), 1),
       weight: 130,
-      unit: "metric",
+      unit: Unit.Metric,
       reps: 4,
-      sets: 3
+      sets: 3,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 103,
       exerciseId: 3, // Referencing Dumbbell Shoulder Press
-      type: "weight",
+      type: ExerciseType.Weight,
       timestamp: subHours(new Date(), 2),
       weight: 30,
-      unit: "imperial",
+      unit: Unit.Imperial,
       reps: 8,
-      sets: 3
+      sets: 3,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 104,
       exerciseId: 4, // Referencing Barbell Squat
-      type: "weight",
+      type: ExerciseType.Weight,
       timestamp: subDays(new Date(), 1),
       weight: 110,
-      unit: "metric",
+      unit: Unit.Metric,
       reps: 5,
-      sets: 4
+      sets: 4,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 105,
       exerciseId: 5, // Referencing Lat Pulldown
-      type: "weight",
+      type: ExerciseType.Weight,
       timestamp: new Date("2025-02-18T14:10:00Z"),
       weight: 160,
-      unit: "imperial",
+      unit: Unit.Imperial,
       reps: 10,
-      sets: 3
+      sets: 3,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     }
   ];
   
@@ -58,37 +69,46 @@ const weightRecords = [
     {
       id: 201,
       exerciseId: 6, // Referencing Plank
-      type: "timed",
+      type: ExerciseType.Timed,
       timestamp: new Date("2025-02-11T11:20:00Z"),
-      time: 75 // seconds
+      time: 75, // seconds
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 202,
       exerciseId: 7, // Referencing Wall Sit
-      type: "timed",
+      type: ExerciseType.Timed,
       timestamp: new Date("2025-02-13T15:40:00Z"),
-      time: 60 // seconds
+      time: 60, // seconds
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 203,
       exerciseId: 8, // Referencing Rowing Machine
-      type: "timed",
+      type: ExerciseType.Timed,
       timestamp: new Date("2025-02-15T07:30:00Z"),
-      time: 1350 // seconds (22.5 minutes)
+      time: 1350, // seconds (22.5 minutes)
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 204,
       exerciseId: 9, // Referencing HIIT Circuit
-      type: "timed",
+      type: ExerciseType.Timed,
       timestamp: new Date("2025-02-17T12:15:00Z"),
-      time: 1080 // seconds (18 minutes)
+      time: 1080, // seconds (18 minutes)
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 205,
       exerciseId: 10, // Referencing Static Stretch
-      type: "timed",
+      type: ExerciseType.Timed,
       timestamp: new Date("2025-02-19T18:05:00Z"),
-      time: 360 // seconds (6 minutes)
+      time: 360, // seconds (6 minutes)
+      rpe: 8
     }
   ];
   
@@ -97,37 +117,47 @@ const weightRecords = [
     {
       id: 301,
       exerciseId: 11, // Referencing Push-ups
-      type: "count",
+      type: ExerciseType.Count,
       timestamp: new Date("2025-02-10T17:25:00Z"),
-      count: 35
+      count: 35,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 302,
       exerciseId: 12, // Referencing Pull-ups
-      type: "count",
+      type: ExerciseType.Count,
       timestamp: new Date("2025-02-12T18:30:00Z"),
-      count: 15
+      count: 15,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 303,
       exerciseId: 13, // Referencing Jumping Jacks
-      type: "count",
+      type: ExerciseType.Count,
       timestamp: new Date("2025-02-14T07:45:00Z"),
-      count: 60
+      count: 60,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 304,
       exerciseId: 14, // Referencing Burpees
-      type: "count",
+      type: ExerciseType.Count,
       timestamp: new Date("2025-02-16T16:40:00Z"),
-      count: 25
+      count: 25,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     },
     {
       id: 305,
       exerciseId: 15, // Referencing Crunches
-      type: "count",
+      type: ExerciseType.Count,
       timestamp: new Date("2025-02-18T10:50:00Z"),
-      count: 45
+      count: 45,
+      rpe: 8,
+      notes: "Good form, slow down on the eccentric"
     }
   ];
   

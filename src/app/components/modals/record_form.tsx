@@ -1,14 +1,17 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { filterExercises, SearchInput } from '@/app/components/common/search_bar'
-import { renderExerciseTypeBadge, formatDefaultCount } from '@/app/components/widgets/exercise_utils'
+import React, { useState, useEffect, useRef } from 'react'
+import SearchBar  from '@/app/components/common/search_bar'
+import { renderExerciseTypeBadge } from '@/app/components/widgets/exercise_utils'
 import { addDays, addHours, subDays, subHours, format, isSameDay, isBefore, set } from 'date-fns'
 import DateSelector from '@/app/components/common/date_selector'
 import TimeSelector from '@/app/components/common/time_selector'
+import { Exercise, ExerciseType, Unit, WeightedExercise, CountedExercise, TimedExercise } from '@/app/lib/models/exercise'
+import { Record, WeightRecord, CountRecord, TimedRecord } from '@/app/lib/models/record'
+import RepositoryFactory from '@/app/lib/repositories/factory'
 
 interface RecordFormProps {
-  record?: ExerciseRecord
+  record?: Record
   onComplete: () => void
   onCancel: () => void
   onDelete?: () => void
@@ -22,54 +25,43 @@ export default function RecordForm({
 }: RecordFormProps) {
   const [loading, setLoading] = useState(false)
   const [dateTime, setDateTime] = useState<Date>(new Date())
+
   const [exercises, setExercises] = useState<Exercise[]>([])
-  const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([])
+  const [notes, setNotes] = useState('')
+
   const [searchTerm, setSearchTerm] = useState('')
+  const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
-  const [count, setCount] = useState('')
-  const [rpe, setRpe] = useState('')
-  const [note, setNote] = useState('')
+
+  // Weight Specific
   const [weight, setWeight] = useState('')
-  const [unit, setUnit] = useState<'kg' | 'lbs'>('lbs')
+  const [unit, setUnit] = useState<Unit>(Unit.Imperial)
+  const [sets, setSets] = useState('')
+  const [reps, setReps] = useState('')
+  const [rpe, setRpe] = useState('10')
+
+  // Count Specific
+  const [count, setCount] = useState('')
+
+  // Timed Specific
+  const [time, setTime] = useState('')
+
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState('')
 
-  // Load exercises and set initial values if editing
-  useEffect(() => {
-    loadExercises()
-    if (record) {
-      setCount(record.count.toString())
-      setRpe(record.rpe?.toString() || '')
-      setNote(record.note || '')
-      setWeight(record.weight?.toString() || '')
-      setUnit(record.unit || 'lbs')
-      setDateTime(new Date(record.dateTime))
-    }
-    console.log(dateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
-  }, [record, dateTime])
-
-  // Find and set the selected exercise when editing
-  useEffect(() => {
-    if (record && exercises.length > 0) {
-      const exercise = exercises.find(e => e.name === record.exerciseName)
-      if (exercise) {
-        setSelectedExercise(exercise)
-        setError('')
-      } else {
-        setError(`Exercise "${record.exerciseName}" not found. It may have been deleted.`)
-      }
-    }
-  }, [record, exercises])
-
-  useEffect(() => {
-    setFilteredExercises(filterExercises(exercises, searchTerm))
-  }, [searchTerm, exercises])
+  const exerciseRepositoryRef = useRef(
+    RepositoryFactory.getExerciseRepository("indexdb")
+  );
+  const recordRepositoryRef = useRef(
+    RepositoryFactory.getRecordRepository("indexdb")
+  );
 
   const loadExercises = async () => {
     try {
       setLoading(true)
-      const data = await ExerciseDB.getAllExercises()
+      const data = await exerciseRepositoryRef.current.getAll()
       setExercises(data)
+      setFilteredExercises(data)
       setLoading(false)
     } catch (err) {
       console.error('Error loading exercises:', err)
@@ -77,63 +69,160 @@ export default function RecordForm({
     }
   }
 
+
+  const setRecordData = async (record: Record) => {
+    const exercise = await exerciseRepositoryRef.current.get(record.exerciseId, "key")
+    setSelectedExercise(exercise)
+    setDateTime(record.timestamp)
+    setNotes(record.notes)
+    if (record.type === ExerciseType.Weight) {
+      const weightRecord = record as WeightRecord
+      setWeight(weightRecord.weight.toString())
+      setUnit(weightRecord.unit)
+    } else if (record.type === ExerciseType.Count) {
+      const countRecord = record as CountRecord
+      setCount(countRecord.count.toString())
+    } else if (record.type === ExerciseType.Timed) {
+      const timedRecord = record as TimedRecord
+      setTime(timedRecord.time.toString())
+    }
+  }
+
+  useEffect(() => {
+    loadExercises()
+    if (record) {
+      setRecordData(record)
+    }
+  }, [record, dateTime])
+
+  useEffect(() => {
+    const filtered = exercises.filter((exercise) => 
+      exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    setFilteredExercises(filtered)
+  }, [searchTerm])
+
   const handleExerciseSelect = (exercise: Exercise) => {
     setSelectedExercise(exercise)
     
-    if (exercise.type !== 'weight') {
+    if (exercise.type !== ExerciseType.Weight) {
       setWeight('')
     }
     
-    if (!record) { // Only set default count for new records
-      if (exercise.type === 'weight') {
-        const match = exercise.defaultCount.match(/(\d+)s(\d+)r/)
-        if (match) {
-          const [, , reps] = match
-          setCount(reps)
-        } else {
-          setCount('')
-        }
-      } else {
-        setCount(exercise.defaultCount)
-      }
+    if (record) return
+
+    if (exercise.type === ExerciseType.Weight) {
+      const weightExercise = exercise as WeightedExercise
+      setWeight(weightExercise.weight.toString())
+      setUnit(weightExercise.unit)
+      setSets(weightExercise.sets.toString())
+      setReps(weightExercise.reps.toString())
+    } else if (exercise.type === ExerciseType.Count) {
+      const countedExercise = exercise as CountedExercise
+      setCount(countedExercise.count.toString())
+    } else if (exercise.type === ExerciseType.Timed) {
+      const timedExercise = exercise as TimedExercise
+      setTime(timedExercise.time.toString())
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate the form
+    if (!selectedExercise) {
+      setError('Please select an exercise')
+      return
+    }
+
+    let newRecord: Record = {
+      id: 0,
+      exerciseId: selectedExercise.id as number,
+      timestamp: dateTime,
+      notes: notes,
+      type: selectedExercise.type,
+    }
+
+    try{
+
+      if (selectedExercise.type === ExerciseType.Weight) {
+
+        const parsedWeight = parseFloat(weight)
+        const parsedSets = parseInt(sets)
+        const parsedReps = parseInt(reps)
+        const parsedRpe = parseInt(rpe)
+
+        if (isNaN(parsedWeight)) {
+          setError('Please enter a weight')
+          return
+        }
+        if (!unit) {
+          setError('Please select a unit')
+          return
+        }
+        if (isNaN(parsedSets)) {
+          setError('Please enter a number of sets')
+          return
+        }
+        if (isNaN(parsedReps)) {
+          setError('Please enter a number of reps')
+          return
+        }
+        if (isNaN(parsedRpe)) {
+          setError('Please enter a RPE')
+          return
+        }
+
+        let weightRecord = newRecord as WeightRecord
+        weightRecord = {
+          ...weightRecord,
+          weight: parsedWeight,
+          unit: unit,
+          sets: parsedSets,
+          reps: parsedReps,
+          rpe: parsedRpe,
+        }
+        await recordRepositoryRef.current.add(weightRecord)
+      }
+
+
+    else if (selectedExercise.type === ExerciseType.Count) {
+      const parsedCount = parseInt(count)
+      const parsedRpe = parseInt(rpe)
+
+      if (isNaN(parsedCount)) {
+        setError('Please enter a count')
+        return
+      }
+      if (isNaN(parsedRpe)) {
+        setError('Please enter a RPE')
+        return
+      }
+
+      let countRecord = newRecord as CountRecord
+      countRecord = {
+        ...countRecord,
+        count: parsedCount,
+        rpe: parsedRpe,
+      }
+      await recordRepositoryRef.current.add(countRecord)
+    }
     
-    if (!selectedExercise) return
-    
-    try {
-      const countValue = parseInt(count)
-      const rpeValue = rpe ? parseFloat(rpe) : null
-      const weightValue = weight ? parseFloat(weight) : undefined
+    else if (selectedExercise.type === ExerciseType.Timed) {
+      const parsedTime = parseInt(time)
 
-      const recordData: ExerciseRecord = {
-        exerciseName: selectedExercise.name,
-        count: countValue,
-        rpe: rpeValue,
-        note,
-        dateTime: dateTime.toISOString(),
-        weight: weightValue,
-        unit: unit
+      if (isNaN(parsedTime)) {
+        setError('Please enter a time')
+        return
       }
 
-      let success: boolean;
-
-      if (record) {
-        success = await ExerciseDB.updateRecord(record.id, recordData)
-      } else {
-        const recordId = await ExerciseDB.addRecord(recordData)
-        recordData.id = recordId
-        success = true
-
+      let timedRecord = newRecord as TimedRecord
+      timedRecord = {
+        ...timedRecord,
+        time: parsedTime,
       }
-
-      if (!success) {
-        setError('Failed to save record');
-        return;
-      }
+      await recordRepositoryRef.current.add(timedRecord)
+    }
 
       onComplete()
       resetForm()
@@ -148,12 +237,14 @@ export default function RecordForm({
 
     try {
       setIsDeleting(true)
-      await ExerciseDB.deleteRecord(record.id)
+      await recordRepositoryRef.current.delete(record)
       onDelete?.()
     } catch (err) {
       console.error('Error deleting record:', err)
     } finally {
       setIsDeleting(false)
+      onComplete()
+      resetForm()
     }
   }
 
@@ -215,10 +306,10 @@ export default function RecordForm({
   const resetForm = () => {
     setSelectedExercise(null)
     setCount('')
-    setRpe('')
-    setNote('')
+    setRpe('10')
+    setNotes('')
     setWeight('')
-    setUnit('lbs')
+    setUnit(Unit.Imperial)
   }
 
   return (
@@ -279,7 +370,7 @@ export default function RecordForm({
                   <>
                     {!selectedExercise && (
                       <div className="mb-2">
-                        <SearchInput
+                        <SearchBar
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           placeholder="Search exercises..."
@@ -289,7 +380,7 @@ export default function RecordForm({
                     {selectedExercise ? (
                       <div className="flex justify-between items-center p-3 border rounded-md">
                         <p className="font-medium">{selectedExercise.name}</p>
-                        {renderExerciseTypeBadge(selectedExercise.type)}
+                        {renderExerciseTypeBadge(selectedExercise)}
                         {!record && (
                           <button
                             type="button"
@@ -310,7 +401,7 @@ export default function RecordForm({
                           >
                             <div className="flex items-center justify-between">
                               <p className="font-medium">{exercise.name}</p>
-                              {renderExerciseTypeBadge(exercise.type)}
+                              {renderExerciseTypeBadge(exercise)}
                             </div>
                           </div>
                         ))}
@@ -339,11 +430,11 @@ export default function RecordForm({
                         />
                         <select
                           value={unit}
-                          onChange={(e) => setUnit(e.target.value as 'kg' | 'lbs')}
+                          onChange={(e) => setUnit(e.target.value as Unit)}
                           className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="lbs">lbs</option>
-                          <option value="kg">kg</option>
+                          <option value={Unit.Imperial}>lbs</option>
+                          <option value={Unit.Metric}>kg</option>
                         </select>
                       </div>
                     </div>
@@ -388,8 +479,8 @@ export default function RecordForm({
                     </label>
                     <textarea
                       id="note"
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
                       rows={2}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -409,7 +500,6 @@ export default function RecordForm({
                 </button>
                 <button
                   type="submit"
-                  disabled={!selectedExercise || !count}
                   className={`px-4 py-2 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     !selectedExercise || !count
                       ? 'bg-blue-300 cursor-not-allowed'
@@ -420,11 +510,6 @@ export default function RecordForm({
                 </button>
               </div>
             </form>
-            {!record && selectedExercise && (
-              <div className="text-sm text-gray-500 mt-1">
-                Default: {formatDefaultCount(selectedExercise.type, selectedExercise.defaultCount)}
-              </div>
-            )}
           </div>
         </div>
     </>
