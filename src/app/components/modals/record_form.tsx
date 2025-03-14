@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import SearchBar from "@/app/components/common/search_bar";
-import { renderExerciseTypeBadge } from "@/app/components/widgets/exercise_utils";
+import { filterExercises, renderExerciseTypeBadge } from "@/app/components/widgets/exercise_utils";
 import {
   addDays,
   addHours,
@@ -122,10 +122,7 @@ export default function RecordForm({
   }, [record]);
 
   useEffect(() => {
-    const filtered = exercises.filter((exercise) =>
-      exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredExercises(filtered);
+    setFilteredExercises(filterExercises(exercises, searchTerm));
   }, [searchTerm]);
 
   const handleExerciseSelect = (exercise: Exercise) => {

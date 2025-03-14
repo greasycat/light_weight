@@ -45,6 +45,8 @@ export default function PlanList() {
     // Process all plans in parallel
     const results = await Promise.all(plans.map(async (plan) => {
       const exerciseIds = Array.from(new Set(plan.exerciseIds));
+
+      const validIds: number[] = []
       const exercises =  await Promise.all(
         exerciseIds.flatMap(async id => {
          let exercise = await exerciseRepositoryRef.current.get(id)
@@ -53,9 +55,15 @@ export default function PlanList() {
           console.log(`Exercise with id ${id} not found.`)
           return []
          }
+         validIds.push(id)
          return [exercise]
         }
       ))
+
+      planRepositoryRef.current.update({
+        ...plan,
+        exerciseIds: validIds
+      })
 
       return { planId: plan.id, exercises };
     }));
@@ -86,10 +94,15 @@ const renderPlanExercises = (plan: Plan) => {
   if (loading) return <span>Loading...</span>;
   
   const exercises: Exercise[] = plansExercises[plan.id.toString()] || [];
+  const exercisesWithIds: {exercise: Exercise, id: number}[] = exercises.map(e => ({exercise: e, id: e.id}))
+
+  if (exercisesWithIds.length === 0) {
+    return <span className='text-gray-500'>No exercises</span>
+  }
 
 
-  return exercises.filter(e => e).map((exercise: Exercise, index: number) => (
-    <div key={exercise.id.toString()} className="flex items-center justify-between gap-2 mb-2 border-b border-gray-200 pb-2">
+  return exercisesWithIds.map(({exercise, id}, index: number) => (
+    <div key={id.toString()} className="flex items-center justify-between gap-2 mb-2 border-b border-gray-200 pb-2">
       <span className=''>{index + 1}. {exercise.name}</span>
       <span className='text-gray-500 px-2'>{renderTypeCount(exercise)}</span>
     </div>
@@ -135,15 +148,18 @@ const renderPlanExercises = (plan: Plan) => {
           No workout plans found. Add some plans to get started!
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {plans.map((plan) => (
             <div 
-              key={plan.id as string}
-              className="rounded-lg shadow p-4 bg-white hover:bg-gray-50 relative"
+              key={plan.id}
+              className="rounded-lg shadow-lg ring-1 ring-gray-200 p-4 bg-white hover:bg-gray-50 relative"
             >
               <Suspense fallback={<div>Loading...</div>}>
               <LongPressable
-                onTrigger={() => setPlanToEdit(plan)}
+                onTrigger={() => {
+                  setPlanToEdit(plan)
+                  setShowForm(true)
+                }}
               >
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-2">
@@ -161,10 +177,17 @@ const renderPlanExercises = (plan: Plan) => {
         </div>
       )}
 
-      {/* {showForm && (
-        // <PlanForm
-        // />
-      )} */}
+      {showForm && (
+        <PlanForm
+          plan={planToEdit}
+          onComplete={() => {
+            setPlanToEdit(null)
+            setShowForm(false)
+            loadPlans()
+          }}
+          onCancel={() => setShowForm(false)}
+        />
+      )}
     </div>
   )
 } 

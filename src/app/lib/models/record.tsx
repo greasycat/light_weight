@@ -2,6 +2,7 @@ import { ExerciseType, Unit } from "./exercise";
 import { IDItem } from "../repositories/interfaces/repository";
 
 export interface Record extends IDItem {
+    id: number;
     exerciseId: number;
     type: ExerciseType;
     timestamp: Date;

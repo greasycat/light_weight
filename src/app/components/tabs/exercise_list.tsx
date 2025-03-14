@@ -3,6 +3,7 @@ import SearchBar from "@/app/components/common/search_bar";
 import {
   renderExerciseTypeBadge,
   renderTypeCount,
+  filterExercises
 } from "@/app/components/widgets/exercise_utils";
 import ExerciseForm from "@/app/components/modals/exercise_form";
 import { Exercise } from "@/app/lib/models/exercise";
@@ -41,21 +42,6 @@ const ExerciseList: React.FC<ExerciseListProps> = ({}) => {
     loadExercises();
   }, []);
 
-  const filterExercises = (
-    exercises: Exercise[],
-    searchTerm: string
-  ): Exercise[] => {
-    if (searchTerm.trim() === "") {
-      return exercises;
-    }
-
-    const lowercaseSearch = searchTerm.toLowerCase();
-    return exercises.filter(
-      (exercise) =>
-        exercise.name.toLowerCase().includes(lowercaseSearch) ||
-        exercise.type.toLowerCase().includes(lowercaseSearch)
-    );
-  };
 
   // Filter exercises when search term changes
   useEffect(() => {
@@ -92,6 +78,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({}) => {
         <h2 className="text-2xl font-bold text-gray-800">Exercises</h2>
         <button
           onClick={handleAddClick}
+          type="button"
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Add Exercise

@@ -12,6 +12,7 @@ export enum Unit {
 }
 
 export interface Exercise extends IDItem {
+    id: number;
     name: string;
     description: string;
     type: ExerciseType;

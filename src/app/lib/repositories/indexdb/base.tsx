@@ -28,7 +28,7 @@ export class IndexDBRepository<T extends IDItem> implements Repository<T> {
 
     async openOrUpgrade(upgradeCallback: (db: IDBDatabase) => void): Promise<IDBDatabase> {
         return new Promise((resolve, reject) => {
-            const openRequest = window.indexedDB.open(this.dbName);
+            const openRequest = indexedDB.open(this.dbName);
             openRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
                 const db = (event.target as IDBOpenDBRequest).result;
                 upgradeCallback(db);

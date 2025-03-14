@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SearchBar from '@/app/components/common/search_bar';
-import { renderExerciseTypeBadge } from '@/app/components/widgets/exercise_utils';
+import { renderExerciseTypeBadge, filterExercises } from '@/app/components/widgets/exercise_utils';
+import  SortableExerciseItem  from '@/app/components/widgets/sortable_exercise';
 import {
     DndContext,
     closestCenter,
@@ -18,228 +19,24 @@ import {
     arrayMove,
     SortableContext,
     sortableKeyboardCoordinates,
-    useSortable,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
-import { CSS } from '@dnd-kit/utilities';
-import {NumberInputOneLine} from '../widgets/number_input';
 import { Plan } from '@/app/lib/models/plan';
 import { Exercise } from '@/app/lib/models/exercise';
+import { ExerciseRepository, PlanRepository } from '@/app/lib/repositories/interfaces/repository';
+import RepositoryFactory from '@/app/lib/repositories/factory';
+
 interface PlanFormProps {
-    plan?: Plan;
+    plan: Plan | null;
     onComplete: () => void;
     onCancel: () => void;
     onDelete?: () => void;
 }
 
-
-interface SortableExerciseItemProps {
-    exercise: Exercise;
-    onRemove: (id: number) => void;
-    onCountChange: (id: number, count: string) => void;
+interface SortableExercise extends Exercise {
+    sortableId: number;
 }
-
-const parseWeightCount = (count: string) => {
-    // regrex match for "10s5r"
-    const match = count.match(/(\d+)s(\d+)r/);
-    if (match) {
-        return { sets: match[1], reps: match[2] };
-    }
-
-    // regrex match for "10r"
-    const match2 = count.match(/(\d+)r/);
-    if (match2) {
-        return { sets: "", reps: match2[1] };
-    }
-
-    const match3 = count.match(/(\d+)s/);
-    if (match3) {
-        return { sets: match3[1], reps: "" };
-    }
-
-    return { sets: "", reps: "" };
-}
-
-const parseTimedCount = (count: string) => {
-    if (isNaN(parseFloat(count))) {
-        return "";
-    }
-    return count;
-}
-
-const parseCount = (count: string) => {
-    if (isNaN(parseFloat(count))) {
-        return "";
-    }
-    return count;
-}
-
-const updateSets = (count: string, sets: string) => {
-    return `${sets}s${parseWeightCount(count).reps}r`;
-}
-
-const updateReps = (count: string, reps: number) => {
-    return `${parseWeightCount(count).sets}s${reps}r`;
-}
-
-const incrementWeightSets = (count: string, num: number) => {
-    const { sets, reps } = parseWeightCount(count);
-    let newSets = parseInt(sets || "0") + num;
-    if (newSets < 1) newSets = 1;
-    return `${newSets}s${reps}r`;
-}
-
-const incrementWeightReps = (count: string, num: number) => {
-    const { sets, reps } = parseWeightCount(count);
-    let newReps = parseInt(reps || "0") + num;
-    if (newReps < 1) newReps = 1;
-    return `${sets}s${newReps}r`;
-}
-
-const incrementCountReps = (count: string, num: number) => {
-    let newReps = parseInt(parseCount(count) || "0") + num;
-    if (newReps < 1) newReps = 1;
-    return newReps.toString();
-}
-
-const incrementTimedCount = (count: string, num: number) => {
-    let newSeconds = parseInt(parseTimedCount(count) || "0") + num;
-    if (newSeconds < 15) newSeconds = 15;
-    return newSeconds.toString();
-}
-
-
-
-
-
-const borderColorByType = (type: string) => {
-    if (type === 'weight') return 'border-l-sky-500';
-    if (type === 'count') return 'border-yellow-500';
-    if (type === 'timed') return 'border-green-500';
-    return 'border-gray-500';
-}
-
-const SortableExerciseItem = ({ exercise: planExercise, onRemove, onCountChange }: SortableExerciseItemProps) => {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging
-    } = useSortable({ id: planExercise.id.toString() });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 1 : 0,
-    };
-
-    const divClasses = "flex flex-row items-center justify-center";
-    const inputClasses = "w-10 remove-arrow text-center font-bold";
-    const iconClasses = "p-1 text-gray-700  mx-1 my-1 rounded-sm";
-    const textClasses = "text-black text-md font-semibold select-none";
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={`flex items-center shadow-sm p-2 mb-2 rounded-sm border-2 ${borderColorByType(planExercise.type)} border-r-0 border-t-0 border-b-0 ${isDragging ? 'shadow-lg' : ''}`}
-        >
-            <div
-                {...attributes}
-                {...listeners}
-                className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded touch-none"
-            >
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" />
-                </svg>
-            </div>
-            <div className="flex-grow">
-                <div className="select-none break-words overflow-wrap-normal text-md md:text-base font-semibold">{planExercise.name}</div>
-            </div>
-            {planExercise.type === 'weight' ? (
-                <div className="flex flex-col md:flex-row items-center">
-                    <NumberInputOneLine
-                        value={parseWeightCount(planExercise.count).sets}
-                        onChange={(e) => onCountChange(planExercise.id, updateSets(planExercise.count, e.target.value))}
-                        onIncrement={() => onCountChange(planExercise.id, incrementWeightSets(planExercise.count, 1))}
-                        onDecrement={() => onCountChange(planExercise.id, incrementWeightSets(planExercise.count, -1))}
-                        text="Set"
-                        placeholder="Sets"
-                        divClassName={divClasses}
-                        inputClassName={inputClasses}
-                        iconClassName={iconClasses}
-                        textClassName={textClasses}
-                    />
-                    <NumberInputOneLine
-                        value={parseWeightCount(planExercise.count).reps.toString()}
-                        onChange={(e) => {
-                            if (e.target.value === "") {
-                                onCountChange(planExercise.id, updateReps(planExercise.count, 1));
-                            } else {
-                                onCountChange(planExercise.id, updateReps(planExercise.count, parseInt(e.target.value)));
-                            }
-                        }}
-                        onIncrement={() => onCountChange(planExercise.id, incrementWeightReps(planExercise.count, 1))}
-                        onDecrement={() => onCountChange(planExercise.id, incrementWeightReps(planExercise.count, -1))}
-                        text="Rep"
-                        placeholder="Reps"
-                        divClassName={divClasses}
-                        inputClassName={inputClasses}
-                        iconClassName={iconClasses}
-                        textClassName={textClasses}
-                    />
-                </div>
-            ) : planExercise.type === 'count' ? (
-
-                <div className='rounded-md sm:pl-8 cursor-pointer flex items-center'>
-                <NumberInputOneLine
-                    value={parseCount(planExercise.count)}
-                    onChange={(e) => onCountChange(planExercise.id, e.target.value)}
-                    onIncrement={() => onCountChange(planExercise.id, incrementCountReps(planExercise.count, 1))}
-                    onDecrement={() => onCountChange(planExercise.id, incrementCountReps(planExercise.count, -1))}
-                    text="Rep"
-                    placeholder="Reps"
-                    divClassName={divClasses}
-                    inputClassName={inputClasses}
-                    iconClassName={iconClasses}
-                    textClassName={textClasses}
-                />
-                </div>
-            ) : planExercise.type === 'timed' ? (
-                <div className="flex items-center">
-                    <NumberInputOneLine
-                        value={parseTimedCount(planExercise.count)}
-                        onChange={(e) => onCountChange(planExercise.id, e.target.value)}
-                        onIncrement={() => onCountChange(planExercise.id, incrementTimedCount(planExercise.count, 15))}
-                        onDecrement={() => onCountChange(planExercise.id, incrementTimedCount(planExercise.count, -15))}
-                        text="Sec"
-                        placeholder="Seconds"
-                        divClassName={divClasses}
-                        inputClassName={inputClasses}
-                        iconClassName={iconClasses}
-                        textClassName={textClasses}
-                    />
-                </div>
-            ) : null}
-            <button
-                type="button"
-                onClick={() => onRemove(planExercise.id)}
-                className="p-2 text-red-400 hover:text-red-700"
-                aria-label="Remove exercise"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    <path d="M10 11v6M14 11v6" />
-                </svg>
-
-            </button>
-        </div>
-    );
-};
 
 const PlanForm: React.FC<PlanFormProps> = ({
     plan,
@@ -247,41 +44,26 @@ const PlanForm: React.FC<PlanFormProps> = ({
     onCancel,
     onDelete
 }) => {
+
+
     const [name, setName] = useState(plan?.name || '');
-    const [schedule, setSchedule] = useState(plan?.schedule || '0000000');
+    const [schedule, setSchedule] = useState(plan?.schedule || 0);
     const [exercises, setExercises] = useState<Exercise[]>([]);
-    const [selectedExercises, setSelectedExercises] = useState<PlanExercise[]>(plan?.exercises || []);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isExercisesCollapsed, setIsExercisesCollapsed] = useState(false);
 
-    const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        }),
-        useSensor(TouchSensor, {
-            activationConstraint: {
-                delay: 250,
-                tolerance: 100,
-            },
-        })
-    );
+    const exerciseRepositoryRef = useRef<ExerciseRepository>(RepositoryFactory.getExerciseRepository("indexdb"));
+    const planRepositoryRef = useRef<PlanRepository>(RepositoryFactory.getPlanRepository("indexdb"));
 
-    useEffect(() => {
-        loadExercises();
-    }, []);
-
-    useEffect(() => {
-        setFilteredExercises(filterExercises(exercises, searchTerm));
-    }, [searchTerm, exercises]);
-
+    
     const loadExercises = async () => {
         try {
             setLoading(true);
-            const data = await ExerciseDB.getAllExercises();
+            const data = await exerciseRepositoryRef.current.getAll();
             setExercises(data);
             setFilteredExercises(data);
             setLoading(false);
@@ -292,34 +74,64 @@ const PlanForm: React.FC<PlanFormProps> = ({
         }
     };
 
+    useEffect(() => {
+        loadExercises();
+    }, []);
+    
+    const getExercises = async (exerciseIds: number[]) => {
+        const validIds: number[] = []
+        const data = await Promise.all(exerciseIds.map(async (id) => {
+            const exercise = await exerciseRepositoryRef.current.get(id);
+            if (exercise) {
+                validIds.push(id);
+            }
+            return exercise;
+        }));
+
+        if (plan?.id) {
+            planRepositoryRef.current.update({
+                ...plan,
+                exerciseIds: validIds
+            });
+        }
+
+        setExercises(data.filter(e => e));
+    }
+
+    useEffect(() => {
+        if (plan?.exerciseIds) {
+            getExercises(plan.exerciseIds);
+        }
+    }, []);
+
+    const [selectedExercises, setSelectedExercises] = useState<SortableExercise[]>([]);
+
+
+
+    useEffect(() => {
+        setFilteredExercises(filterExercises(exercises, searchTerm));
+    }, [searchTerm, exercises]);
+
+
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
     };
 
     const handleScheduleChange = (dayIndex: number) => {
-        const newSchedule = schedule.split('');
-        newSchedule[dayIndex] = newSchedule[dayIndex] === '1' ? '0' : '1';
-        setSchedule(newSchedule.join(''));
+        setSchedule(schedule ^ (1 << dayIndex));
     };
 
     const handleExerciseSelect = (exercise: Exercise) => {
-        const newEntry: PlanExercise = {
-            id: selectedExercises.length,
-            name: exercise.name,
-            type: exercise.type,
-            count: exercise.defaultCount
+        const newEntry: SortableExercise = {
+            ...exercise,
+            sortableId: selectedExercises.length
         };
         setSelectedExercises([...selectedExercises, newEntry]);
     };
 
-    const handleExerciseRemove = (id: number) => {
-        setSelectedExercises(selectedExercises.filter(e => e.id !== id).map((e, index) => ({ ...e, id: index })));
-    };
-
-    const handleCountChange = (id: number, count: string) => {
-        setSelectedExercises(selectedExercises.map(e =>
-            e.id === id ? { ...e, count } : e
-        ));
+    const handleExerciseRemove = (sortableId: number) => {
+        console.log("handleExerciseRemove", sortableId);
+        setSelectedExercises(selectedExercises.filter(e => e.sortableId !== sortableId).map((e, index) => ({ ...e, sortableId: index })));
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -327,8 +139,8 @@ const PlanForm: React.FC<PlanFormProps> = ({
 
         if (over && active.id !== over.id) {
             setSelectedExercises((exercises) => {
-                const oldIndex = exercises.findIndex((e) => e.id === active.id);
-                const newIndex = exercises.findIndex((e) => e.id === over.id);
+                const oldIndex = exercises.findIndex((e) => e.sortableId === active.id);
+                const newIndex = exercises.findIndex((e) => e.sortableId === over.id);
 
                 return arrayMove(exercises, oldIndex, newIndex);
             });
@@ -342,29 +154,7 @@ const PlanForm: React.FC<PlanFormProps> = ({
             setError('Please select at least one exercise');
             return;
         }
-
-        try {
-            if (plan?.id) {
-                await ExerciseDB.updatePlan(plan.id, {
-                    ...plan,
-                    name,
-                    exercises: selectedExercises,
-                    schedule,
-                    updatedAt: new Date().toISOString()
-                });
-            } else {
-                await ExerciseDB.addPlan({
-                    name,
-                    exercises: selectedExercises,
-                    schedule,
-                    createdAt: new Date().toISOString()
-                });
-            }
-            onComplete();
-        } catch (err) {
-            setError('Failed to save plan, possible duplicate name');
-            console.error('Error saving plan:', err);
-        }
+        onComplete();
     };
 
     const handleDelete = async () => {
@@ -372,7 +162,7 @@ const PlanForm: React.FC<PlanFormProps> = ({
 
         if (window.confirm('Are you sure you want to delete this plan? This cannot be undone.')) {
             try {
-                await ExerciseDB.deletePlan(plan.id);
+                await planRepositoryRef.current.delete(plan);
                 onDelete?.();
             } catch (err) {
                 setError('Failed to delete plan');
@@ -382,6 +172,19 @@ const PlanForm: React.FC<PlanFormProps> = ({
     };
 
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 250,
+                tolerance: 100,
+            },
+        })
+    );
 
     return (
         <div className="fixed inset-0 bg-neutral-200/80 flex items-start justify-center p-2 sm:p-4 z-50 overflow-y-auto">
@@ -428,8 +231,7 @@ const PlanForm: React.FC<PlanFormProps> = ({
                                         key={day}
                                         type="button"
                                         onClick={() => handleScheduleChange(index)}
-                                        className={`select-none min-w-12 px-2 py-2 rounded-md text-sm font-medium touch-manipulation ${schedule[index] === '1'
-                                            ? 'bg-blue-600 text-white'
+                                        className={`select-none min-w-12 px-2 py-2 rounded-md text-sm font-medium touch-manipulation ${schedule & (1 << index) ? 'bg-blue-600 text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                     >
@@ -470,15 +272,14 @@ const PlanForm: React.FC<PlanFormProps> = ({
                                         onDragEnd={handleDragEnd}
                                     >
                                         <SortableContext
-                                            items={selectedExercises.map(e => e.id)}
+                                            items={selectedExercises.map(e => e.sortableId)}
                                             strategy={verticalListSortingStrategy}
                                         >
                                             {selectedExercises.map(exercise => (
                                                 <SortableExerciseItem
-                                                    key={exercise.id}
+                                                    key={exercise.sortableId}
                                                     exercise={exercise}
                                                     onRemove={handleExerciseRemove}
-                                                    onCountChange={handleCountChange}
                                                 />
                                             ))}
                                         </SortableContext>
@@ -504,10 +305,10 @@ const PlanForm: React.FC<PlanFormProps> = ({
                                             <div
                                                 key={exercise.name}
                                                 onClick={() => handleExerciseSelect(exercise)}
-                                                className="flex items-center justify-between p-3 rounded-md hover:bg-gray-100 cursor-pointer active:bg-gray-200 select-none border-2 border-gray-100"
+                                                className="flex items-center justify-between p-3 shadow-sm rounded-md hover:bg-gray-100 cursor-pointer active:bg-gray-200 select-none "
                                             >
                                                 <div className="font-medium truncate mr-2">{exercise.name}</div>
-                                                {renderExerciseTypeBadge(exercise.type)}
+                                                {renderExerciseTypeBadge(exercise)}
                                             </div>
                                         ))}
                                     </div>

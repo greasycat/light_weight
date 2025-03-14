@@ -109,3 +109,26 @@ export function renderWeightRecordProperties(record: Record) {
     }
     return "Unknown";
   };
+
+export const borderColorByType = (type: string) => {
+    if (type === 'weight') return 'border-l-sky-500';
+    if (type === 'count') return 'border-yellow-500';
+    if (type === 'timed') return 'border-green-500';
+    return 'border-gray-500';
+}
+
+export const filterExercises = (
+  exercises: Exercise[],
+  searchTerm: string
+): Exercise[] => {
+    if (searchTerm.trim() === "") {
+      return exercises;
+    }
+
+    const lowercaseSearch = searchTerm.toLowerCase();
+    return exercises.filter(
+      (exercise) =>
+        exercise.name.toLowerCase().includes(lowercaseSearch) ||
+        exercise.type.toLowerCase().includes(lowercaseSearch)
+    );
+  };

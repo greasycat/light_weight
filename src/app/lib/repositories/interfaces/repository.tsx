@@ -5,7 +5,7 @@ import { Plan } from "../../models/plan";
 import { Workout } from "../../models/workout";
 
 export interface IDItem {
-    id: number | string | Date 
+    id: number
 }
 
 export interface Repository<T extends IDItem> {
