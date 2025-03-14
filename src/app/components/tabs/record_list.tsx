@@ -15,16 +15,16 @@ import { Record } from "@/app/lib/models/record";
 import LongPressable from "../common/long_pressable";
 import RepositoryFactory from "@/app/lib/repositories/factory";
 import {
-  renderTypeCount,
   renderWeightRecordProperties,
+  getExerciseName,
 } from "../widgets/exercise_utils";
 
 export default function RecordList() {
   const [records, setRecords] = useState<Record[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showForm, setShowForm] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<Record | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditingForm, setEditingRecord] = useState<Record | null>(null);
   const recordRepositoryRef = useRef(
     RepositoryFactory.getRecordRepository("indexdb")
   );
@@ -32,16 +32,6 @@ export default function RecordList() {
     RepositoryFactory.getExerciseRepository("indexdb")
   );
 
-  const getExerciseName = async (record: Record) => {
-    const exercise = await exerciseRepositoryRef.current.get(
-      record.exerciseId,
-      "key"
-    );
-    if (exercise) {
-      return exercise.name;
-    }
-    return "Unknown";
-  };
 
   const loadRecords = useCallback(async () => {
     try {
@@ -88,13 +78,13 @@ export default function RecordList() {
   const handleRecordComplete = async () => {
     await loadRecords();
     setEditingRecord(null);
-    setShowForm(false);
+    setShowAddForm(false);
   };
 
   const handleRecordDelete = async () => {
     await loadRecords();
     setEditingRecord(null);
-    setShowForm(false);
+    setShowAddForm(false);
   };
 
   if (loading) {
@@ -138,18 +128,12 @@ export default function RecordList() {
         <button
           onClick={() => {
             setEditingRecord(null);
-            setShowForm(true);
+            setShowAddForm(true);
           }}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Add Record
         </button>
-        {showForm && (
-          <RecordForm
-            onComplete={handleRecordComplete}
-            onCancel={() => setShowForm(false)}
-          />
-        )}
       </div>
 
       {records.length === 0 ? (
@@ -158,6 +142,7 @@ export default function RecordList() {
         </div>
       ) : (
         <Suspense fallback={<div>Loading...</div>}>
+          <p className="mb-2 text-xs text-gray-400">Press and hold to edit</p>
           <div className="space-y-2">
             {records.map((record) => (
               <div
@@ -167,7 +152,6 @@ export default function RecordList() {
                 <LongPressable
                   onTrigger={() => {
                     setEditingRecord(record);
-                    setShowForm(true);
                   }}
                 >
                   <div className="flex justify-between relative z-10">
@@ -176,7 +160,7 @@ export default function RecordList() {
                           {format(new Date(record.timestamp), "hh:mm a")}
                         </span>
                         <span className="font-medium select-none">
-                          {getExerciseName(record)}
+                          {getExerciseName(exerciseRepositoryRef.current, record)}
                         </span>
                         <span className="text-xs text-gray-500 select-none">
                           {record.notes}
@@ -192,9 +176,15 @@ export default function RecordList() {
         </Suspense>
       )}
 
-      {editingRecord && (
+      {showAddForm && (
+          <RecordForm
+            onComplete={handleRecordComplete}
+            onCancel={() => setShowAddForm(false)}
+          />
+      )}
+      {showEditingForm && (
         <RecordForm
-          record={editingRecord}
+          record={showEditingForm}
           onComplete={handleRecordComplete}
           onCancel={() => setEditingRecord(null)}
           onDelete={handleRecordDelete}

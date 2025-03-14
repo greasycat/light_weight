@@ -14,6 +14,7 @@ export interface Repository<T extends IDItem> {
     delete(item: T): Promise<void>;
     clear(): Promise<void>;
     close(): Promise<void>;
+    get(index: number): Promise<T>;
 }
 
 

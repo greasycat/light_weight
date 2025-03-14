@@ -6,5 +6,6 @@ export interface Plan extends IDItem {
     exerciseIds: number[];
     updatedAt: Date;
     createdAt: Date;
+    schedule: number; // bitmask of days of the week leftmost bit is sunday rightmost bit is saturday
 }
 

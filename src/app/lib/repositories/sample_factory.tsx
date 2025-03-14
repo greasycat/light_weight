@@ -4,6 +4,7 @@ import { WeightedExercise, TimedExercise, CountedExercise } from "../models/exer
 
 import RecordSamples from "../models/sample/records_samples";
 import { WeightRecord, TimedRecord, CountRecord } from "../models/record";
+import PlanSamples from "../models/sample/plan_samples";
 
 class SampleFactory {
     static async generateExercises(repository: ExerciseRepository): Promise<void> {
@@ -71,6 +72,22 @@ class SampleFactory {
 
         if (failed_to_add.length > 0) {
             throw new Error("Failed to add records: " + failed_to_add.join(", "));
+        }
+    }
+
+    static async generatePlans(repository: PlanRepository): Promise<void> {
+        let failed_to_add = [];
+        for (const plan of PlanSamples) {
+            try {
+                await repository.add(plan);
+            } catch (error) {
+                console.log("Error adding plan: ", plan.id);
+                failed_to_add.push(plan.id);
+            }
+        }
+
+        if (failed_to_add.length > 0) {
+            throw new Error("Failed to add plans: " + failed_to_add.join(", "));
         }
     }
     

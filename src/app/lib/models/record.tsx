@@ -13,7 +13,6 @@ export interface WeightRecord extends Record {
     weight: number;
     unit: Unit;
     reps: number;
-    sets: number;
     rpe: number;
 }
 

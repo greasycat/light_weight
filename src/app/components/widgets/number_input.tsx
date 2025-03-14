@@ -1,5 +1,5 @@
-import {PlusIcon, MinusIcon} from '@heroicons/react/24/outline';
-import { Unit } from '../../lib/models/exercise';
+import { PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
+import { Unit } from "../../lib/models/exercise";
 
 interface NumberInputOneLineProps {
   value: string;
@@ -27,13 +27,11 @@ const NumberInputOneLine: React.FC<NumberInputOneLineProps> = ({
   text,
 }) => {
   return (
-    <div
-      className={`${divClassName}`}
-    >
+    <div className={`${divClassName}`}>
       <div className={`${iconClassName}`}>
         <MinusIcon className="w-6 h-6" onClick={onDecrement} />
       </div>
-      
+
       <span className={`${textClassName}`}>{text}</span>
       <input
         type="text"
@@ -75,52 +73,60 @@ const WeightNumberInput: React.FC<WeightNumberInputProps> = ({
 }) => {
   const adjustWeight = (amount: number) => {
     const newValue = parseFloat((parseFloat(weight) + amount).toFixed(1));
-    onWeightChange(newValue >= 0 ? newValue.toString() : '0');
+    onWeightChange(newValue >= 0 ? newValue.toString() : "0");
   };
-
 
   return (
     <div className={`rounded-md p-2 flex flex-col items-center ${className}`}>
-      <div className="flex items-center w-full justify-between mb-2">
+      <div className="flex justify-between items-center mb-2 w-full">
         <span className={`${textColor} font-bold text-lg select-none`}>
           {text}
         </span>
-        <div className="flex items-center">
+        <div className="flex">
           <input
             type="number"
             value={weight}
             onChange={(e) => onWeightChange(e.target.value)}
-            placeholder={unit}
+            placeholder={"405"}
             inputMode="decimal"
             step="0.1"
-            className="w-16 px-2 py-1 text-lg remove-arrow text-center focus:ring-0 focus:outline-none"
+            className="w-16 mr-4 text-2xl remove-arrow text-center focus:ring-1 focus:outline-none border-gray-300 rounded-md"
           />
-
-          <button
-            onClick={() => onUnitChange(Unit.Imperial)}
-            type="button"
-            className={`border-r-0 border-gray-300 px-2 py-2 rounded-l-sm
-                ${unit === Unit.Imperial ? "bg-blue-500 text-white" : "text-gray-300 bg-gray-100"}`}
-          >
-            {Unit.Imperial}
-          </button>
-          <button
-            onClick={() => onUnitChange(Unit.Metric)}
-            type="button"
-            className={`border-l-0 border-gray-300 px-2 py-2 rounded-r-sm
-                ${unit === Unit.Metric ? "bg-blue-500 text-white" : "text-gray-300 bg-gray-100"}`}
-          >
-            {Unit.Metric}
-          </button>
+          <div className="flex">
+            <button
+              onClick={() => onUnitChange(Unit.Imperial)}
+              type="button"
+              className={` px-2 py-2 rounded-l-md
+            ${
+              unit === Unit.Imperial
+                ? "bg-blue-500 text-white"
+                : "text-gray-300 bg-gray-100"
+            }`}
+            >
+              {Unit.Imperial}
+            </button>
+            <button
+              onClick={() => onUnitChange(Unit.Metric)}
+              type="button"
+              className={` border-l-0 px-2 py-2 rounded-r-md
+            ${
+              unit === Unit.Metric
+                ? "bg-blue-500 text-white"
+                : "text-gray-300 bg-gray-100"
+            }`}
+            >
+              {Unit.Metric}
+            </button>
+          </div>
         </div>
       </div>
-      <div className="flex justify-between w-full space-x-2">
+      <div className="flex justify-between w-full space-x-4">
         {incrementValues.map((value) => (
           <button
             key={value}
             onClick={() => adjustWeight(value)}
             type="button"
-            className="bg-gray-100 hover:bg-gray-300 text-black py-1 px-2 flex-1"
+            className="bg-neutral-100 rounded-md hover:bg-gray-200 text-gray-500 py-1 px-2 flex-1"
           >
             {value > 0 ? `+${value}` : value}
           </button>
@@ -151,7 +157,7 @@ const SimpleNumberInput: React.FC<SimpleNumberInputProps> = ({
 }) => {
   const adjustValue = (amount: number) => {
     const newValue = parseFloat(value) + amount;
-    onChange(newValue >= 0 ? newValue.toString() : '0');
+    onChange(newValue >= 0 ? newValue.toString() : "0");
   };
 
   return (
@@ -174,7 +180,7 @@ const SimpleNumberInput: React.FC<SimpleNumberInputProps> = ({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             inputMode="numeric"
-            className="w-16 px-2 py-1 text-lg remove-arrow text-center focus:ring-0 focus:outline-none"
+            className="w-16 px-2 py-1 text-xl remove-arrow text-center focus:ring-0 focus:outline-none"
           />
           <button
             onClick={() => adjustValue(incrementValue)}
@@ -210,7 +216,7 @@ const ComplexNumberInput: React.FC<ComplexNumberInputProps> = ({
 }) => {
   const adjustTime = (amount: number) => {
     const newValue = parseInt(value) + amount;
-    onChange(newValue >= 0 ? newValue.toString() : '0');
+    onChange(newValue >= 0 ? newValue.toString() : "0");
   };
 
   return (
@@ -260,5 +266,9 @@ const ComplexNumberInput: React.FC<ComplexNumberInputProps> = ({
   );
 };
 
-
-export { NumberInputOneLine, WeightNumberInput, SimpleNumberInput, ComplexNumberInput };
+export {
+  NumberInputOneLine,
+  WeightNumberInput,
+  SimpleNumberInput,
+  ComplexNumberInput,
+};

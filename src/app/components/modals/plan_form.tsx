@@ -24,6 +24,8 @@ import {
 
 import { CSS } from '@dnd-kit/utilities';
 import {NumberInputOneLine} from '../widgets/number_input';
+import { Plan } from '@/app/lib/models/plan';
+import { Exercise } from '@/app/lib/models/exercise';
 interface PlanFormProps {
     plan?: Plan;
     onComplete: () => void;
@@ -33,7 +35,7 @@ interface PlanFormProps {
 
 
 interface SortableExerciseItemProps {
-    exercise: PlanExercise;
+    exercise: Exercise;
     onRemove: (id: number) => void;
     onCountChange: (id: number, count: string) => void;
 }
@@ -60,14 +62,14 @@ const parseWeightCount = (count: string) => {
 }
 
 const parseTimedCount = (count: string) => {
-    if (!isNumber(count)) {
+    if (isNaN(parseFloat(count))) {
         return "";
     }
     return count;
 }
 
 const parseCount = (count: string) => {
-    if (!isNumber(count)) {
+    if (isNaN(parseFloat(count))) {
         return "";
     }
     return count;
@@ -126,7 +128,7 @@ const SortableExerciseItem = ({ exercise: planExercise, onRemove, onCountChange 
         transform,
         transition,
         isDragging
-    } = useSortable({ id: planExercise.id });
+    } = useSortable({ id: planExercise.id.toString() });
 
     const style = {
         transform: CSS.Transform.toString(transform),

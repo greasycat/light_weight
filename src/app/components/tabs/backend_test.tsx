@@ -14,6 +14,7 @@ export default function BackendTest() {
 
     const exerciseRepositoryRef = useRef(RepositoryFactory.getExerciseRepository('indexdb'));
     const recordRepositoryRef = useRef(RepositoryFactory.getRecordRepository('indexdb'));
+    const planRepositoryRef = useRef(RepositoryFactory.getPlanRepository('indexdb'));
 
     useEffect(() => {
         exerciseRepositoryRef.current.getAll().then((exercises) => {
@@ -21,6 +22,9 @@ export default function BackendTest() {
         });
         recordRepositoryRef.current.getAll().then((records) => {
             setAllRecords(records);
+        });
+        planRepositoryRef.current.getAll().then((plans) => {
+            setAllPlans(plans);
         });
     }, []);
 
@@ -50,17 +54,31 @@ export default function BackendTest() {
         }
     }
 
+    const generateSamplePlans = async () => {
+        try {
+            await SampleFactory.generatePlans(planRepositoryRef.current);
+        } catch (error) {
+            setError((error as Error).message);
+        }
+        try {
+            const plans = await planRepositoryRef.current.getAll();
+            setAllPlans(plans);
+        } catch (error) {
+            setError((error as Error).message);
+        }
+    }
+
     const clearAllData = async () => {
         setAllRecords([]);
         setAllExercises([]);
-        await exerciseRepositoryRef.current.deleteDatabase();
-        await recordRepositoryRef.current.deleteDatabase();
-        //refresh page
-        window.location.reload();
+        setAllPlans([]);
+        exerciseRepositoryRef.current.deleteDatabase();
+        recordRepositoryRef.current.deleteDatabase();
+        planRepositoryRef.current.deleteDatabase();
     }
 
     const getExerciseName = async (record: Record) => {
-        const exercise = await exerciseRepositoryRef.current.get(record.exerciseId, "key");
+        const exercise = await exerciseRepositoryRef.current.get(record.exerciseId);
         if (exercise) {
             return exercise.name;
         }
@@ -70,9 +88,12 @@ export default function BackendTest() {
     return (
         <div>
             <p className="text-red-500">{error}</p>
+            <div className="flex gap-2">
             <button className="border border-gray-300 rounded-md px-4 py-2" onClick={generateSampleExercises}>Generate Sample Exercises</button>
             <button className="border border-gray-300 rounded-md px-4 py-2" onClick={generateSampleRecords}>Generate Sample Records</button>
+            <button className="border border-gray-300 rounded-md px-4 py-2" onClick={generateSamplePlans}>Generate Sample Plans</button>
             <button className="border border-gray-300 rounded-md px-4 py-2" onClick={clearAllData}>Clear All Data</button>
+            </div>
             <div>
                 <h2>All Exercises</h2>
                 <ul> {allExercises.map((exercise) => (
@@ -88,6 +109,13 @@ export default function BackendTest() {
                     ))}
                 </ul>
                 </Suspense>
+            </div>
+            <div>
+                <h2>All Plans</h2>
+                <ul> {allPlans.map((plan) => (
+                        <li className="text-sm border border-gray-300 rounded-md px-4 py-2" key={plan.id.toString()}>{JSON.stringify(plan)}</li>
+                    ))}
+                </ul>
             </div>
         </div>
     )

@@ -137,7 +137,11 @@ export class IndexDBRepository<T extends IDItem> implements Repository<T> {
         })
     }
 
-    async get(index: IDBValidKey, indexName: string | "key"): Promise<T> {
+    async get(index: number): Promise<T> {
+        return this.getByKey(index, "key");
+    }
+
+    async getByKey(index: IDBValidKey, indexName: string | "key"): Promise<T> {
         const db = await this.dbPromise
         return new Promise((resolve, reject) => {
             const transaction = db.transaction([this.storeName], 'readonly');
@@ -253,4 +257,31 @@ export class IndexDBRepository<T extends IDItem> implements Repository<T> {
           });
         });
       }
+
+    async filter(filter: (item: T) => boolean): Promise<T[]> {
+        const db = await this.dbPromise
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([this.storeName], 'readonly');
+            transaction.onabort = () => reject(new Error('Transaction aborted'));
+            transaction.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+
+            const store = transaction.objectStore(this.storeName);
+
+            const items: T[] = [];
+            const request = store.openCursor();
+
+            request.onsuccess = () => {
+                const cursor = request.result;
+                if (cursor) {
+                    if (filter(cursor.value as T)) {
+                        items.push(cursor.value as T);
+                    }
+                    cursor.continue();
+                } else {
+                    resolve(items);
+                }
+            }
+            request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+        })
+    }
 }

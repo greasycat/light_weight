@@ -8,7 +8,7 @@ export enum ExerciseType {
 
 export enum Unit {
     Metric = 'kg',
-    Imperial = 'lb'
+    Imperial = 'lbs'
 }
 
 export interface Exercise extends IDItem {
